@@ -1,0 +1,119 @@
+'use client';
+
+import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Menu, Bell, Search, User, LogOut, Settings } from 'lucide-react';
+
+interface TopBarProps {
+  onMenuClick: () => void;
+}
+
+export function TopBar({ onMenuClick }: TopBarProps) {
+  const { user, logout } = useAuth();
+  const [notifications] = useState(3); // Mock notification count
+
+  return (
+    <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+      {/* Mobile menu button */}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="lg:hidden"
+        onClick={onMenuClick}
+      >
+        <Menu className="h-6 w-6" />
+        <span className="sr-only">Open sidebar</span>
+      </Button>
+
+      {/* Separator */}
+      <div className="h-6 w-px bg-gray-200 lg:hidden" />
+
+      {/* Search */}
+      <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+        <div className="relative flex flex-1 items-center">
+          <Search className="pointer-events-none absolute inset-y-0 left-0 h-full w-5 text-gray-400" />
+          <input
+            className="block h-full w-full border-0 py-0 pl-8 pr-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm"
+            placeholder="Search..."
+            type="search"
+            name="search"
+          />
+        </div>
+      </div>
+
+      {/* Right side */}
+      <div className="flex items-center gap-x-4 lg:gap-x-6">
+        {/* Notifications */}
+        <Button variant="ghost" size="sm" className="relative">
+          <Bell className="h-5 w-5" />
+          {notifications > 0 && (
+            <Badge
+              variant="destructive"
+              className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+            >
+              {notifications}
+            </Badge>
+          )}
+          <span className="sr-only">View notifications</span>
+        </Button>
+
+        {/* Separator */}
+        <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-gray-200" />
+
+        {/* Profile dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user?.picture || ''} alt={user?.username || ''} />
+                <AvatarFallback>
+                  {user?.username?.charAt(0).toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56" align="end" forceMount>
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">
+                  {user?.first_name && user?.last_name
+                    ? `${user.first_name} ${user.last_name}`
+                    : user?.username}
+                </p>
+                <p className="text-xs leading-none text-muted-foreground">
+                  {user?.email}
+                </p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <User className="mr-2 h-4 w-4" />
+              <span>Profile</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Settings</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={logout} className="text-red-600">
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Log out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  );
+}
+

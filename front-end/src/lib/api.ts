@@ -1,0 +1,780 @@
+import axios from 'axios';
+import { BlogPost, Author, Amenity, Location, Developer, Compound, Property, PropertyImage, Partner, Testimonial, ContactFormSubmission } from './types';
+
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000/api/public/').replace(/\/+$|\/+(?=\?)/g, '/');
+const ADMIN_API_BASE_URL = (process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL || 'http://127.0.0.1:8000/api/admin/').replace(/\/+$|\/+(?=\?)/g, '/');
+
+// Token storage utility
+const getAuthToken = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('authToken');
+};
+
+// Set up axios interceptor to include auth token in admin requests
+axios.interceptors.request.use(
+  (config) => {
+    // Only add auth token to admin API requests
+    if (config.url?.includes(ADMIN_API_BASE_URL) || config.url?.includes('/admin/')) {
+      const token = getAuthToken();
+      if (token) {
+        config.headers.Authorization = `Token ${token}`;
+      }
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Set up axios interceptor to handle 401 responses
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Remove token and redirect to login
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('authToken');
+        if (!window.location.pathname.includes('/admin/login')) {
+          window.location.href = '/admin/login';
+        }
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+interface ApiResponse<T> {
+  results: T[];
+  count: number;
+  next: string | null;
+  previous: string | null;
+}
+
+// Filter interfaces
+interface PropertyFilters {
+  location?: string;
+  property_type?: string;
+  min_price?: number;
+  max_price?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  compound?: string | number;
+  developer?: string | number;
+  is_featured?: boolean;
+  is_new_launch?: boolean;
+  search?: string;
+  page?: number;
+  page_size?: number;
+}
+
+interface CompoundFilters {
+  developer?: string | number;
+  location?: string | number;
+  search?: string;
+  page?: number;
+  page_size?: number;
+}
+
+interface DeveloperFilters {
+  search?: string;
+  page?: number;
+  page_size?: number;
+}
+
+interface BlogPostFilters {
+  author?: string | number;
+  status?: 'Published' | 'Draft';
+  search?: string;
+  page?: number;
+  page_size?: number;
+}
+
+export interface BlogPostInput extends Partial<Omit<BlogPost, 'author'>> {
+  author?: number | null;
+}
+
+interface TestimonialFilters {
+  page?: number;
+  page_size?: number;
+}
+
+export async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<{
+  results: T[];
+  count: number;
+  next: string | null;
+  previous: string | null;
+}> {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+  if (!response.ok) throw new Error('API request failed');
+  return response.json();
+}
+
+export async function fetchApiWithParams<T>(endpoint: string, params?: Record<string, any>, baseURL?: string): Promise<ApiResponse<T>> {
+  try {
+    const url = baseURL || API_BASE_URL;
+    const response = await axios.get(`${url}${endpoint}`, { params });
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(`API call failed: ${error.message} - ${error.response?.statusText}`);
+    } else {
+      throw new Error(`An unexpected error occurred: ${error}`);
+    }
+  }
+}
+
+// ===== PROPERTIES API =====
+export async function getProperties(filters?: PropertyFilters): Promise<ApiResponse<Property>> {
+  try {
+    const params: Record<string, any> = {};
+    
+    if (filters?.location) params.location = filters.location;
+    if (filters?.property_type) params.property_type = filters.property_type;
+    if (filters?.min_price) params.min_price = filters.min_price;
+    if (filters?.max_price) params.max_price = filters.max_price;
+    if (filters?.bedrooms) params.bedrooms = filters.bedrooms;
+    if (filters?.bathrooms) params.bathrooms = filters.bathrooms;
+    if (filters?.compound) params.compound = filters.compound;
+    if (filters?.developer) params.developer = filters.developer;
+    if (filters?.is_featured !== undefined) params.is_featured = filters.is_featured;
+    if (filters?.is_new_launch !== undefined) params.is_new_launch = filters.is_new_launch;
+    if (filters?.search) params.search = filters.search;
+    if (filters?.page) params.page = filters.page;
+    if (filters?.page_size) params.page_size = filters.page_size;
+    
+    return await fetchApiWithParams<Property>('properties/', params);
+  } catch (error) {
+    console.error('Error fetching properties:', error);
+    return { results: [], count: 0, next: null, previous: null };
+  }
+}
+
+export async function getAdminProperties(filters?: PropertyFilters): Promise<ApiResponse<Property>> {
+  try {
+    const params: Record<string, any> = {};
+
+    if (filters?.location) params.location = filters.location;
+    if (filters?.property_type) params.property_type = filters.property_type;
+    if (filters?.min_price) params.min_price = filters.min_price;
+    if (filters?.max_price) params.max_price = filters.max_price;
+    if (filters?.bedrooms) params.bedrooms = filters.bedrooms;
+    if (filters?.bathrooms) params.bathrooms = filters.bathrooms;
+    if (filters?.compound) params.compound = filters.compound;
+    if (filters?.developer) params.developer = filters.developer;
+    if (filters?.is_featured !== undefined) params.is_featured = filters.is_featured;
+    if (filters?.is_new_launch !== undefined) params.is_new_launch = filters.is_new_launch;
+    if (filters?.search) params.search = filters.search;
+    if (filters?.page) params.page = filters.page;
+    if (filters?.page_size) params.page_size = filters.page_size;
+
+    return await fetchApiWithParams<Property>('properties/', params, ADMIN_API_BASE_URL);
+  } catch (error) {
+    console.error('Error fetching admin properties:', error);
+    return { results: [], count: 0, next: null, previous: null };
+  }
+}
+
+export async function getPropertyById(id: string): Promise<Property | null> {
+  try {
+    const response = await axios.get(`${API_BASE_URL}properties/${id}/`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching property by ID:', error);
+    return null;
+  }
+}
+
+export async function getPropertyBySlug(slug: string): Promise<Property | null> {
+  try {
+    const data = await fetchApiWithParams<Property>('properties/', { slug });
+    return data.results.length > 0 ? data.results[0] : null;
+  } catch (error) {
+    console.error('Error fetching property by slug:', error);
+    return null;
+  }
+}
+
+export async function createProperty(data: Partial<Property>): Promise<Property> {
+  try {
+    const response = await axios.post(`${ADMIN_API_BASE_URL}properties/`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating property:', error);
+    throw error;
+  }
+}
+
+export async function updateProperty(id: number, data: Partial<Property>): Promise<Property> {
+  try {
+    const response = await axios.put(`${ADMIN_API_BASE_URL}properties/${id}/`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating property:', error);
+    throw error;
+  }
+}
+
+export async function deleteProperty(id: number): Promise<void> {
+  try {
+    await axios.delete(`${ADMIN_API_BASE_URL}properties/${id}/`);
+  } catch (error) {
+    console.error('Error deleting property:', error);
+    throw error;
+  }
+}
+
+export async function getFeaturedProperties(): Promise<ApiResponse<Property>> {
+  return getProperties({ is_featured: true });
+}
+
+export async function getNewLaunches(): Promise<ApiResponse<Property>> {
+  return getProperties({ is_new_launch: true });
+}
+
+// ===== COMPOUNDS API =====
+export async function getCompounds(filters?: CompoundFilters): Promise<ApiResponse<Compound>> {
+  try {
+    const params: Record<string, any> = {};
+
+    if (filters?.developer) params.developer = filters.developer;
+    if (filters?.location) params.location = filters.location;
+    if (filters?.search) params.search = filters.search;
+    if (filters?.page) params.page = filters.page;
+    if (filters?.page_size) params.page_size = filters.page_size;
+
+    return await fetchApiWithParams<Compound>('compounds/', params);
+  } catch (error) {
+    console.error('Error fetching compounds:', error);
+    return { results: [], count: 0, next: null, previous: null };
+  }
+}
+
+export async function getAdminCompounds(filters?: CompoundFilters): Promise<ApiResponse<Compound>> {
+  try {
+    const params: Record<string, any> = {};
+
+    if (filters?.developer) params.developer = filters.developer;
+    if (filters?.location) params.location = filters.location;
+    if (filters?.search) params.search = filters.search;
+    if (filters?.page) params.page = filters.page;
+    if (filters?.page_size) params.page_size = filters.page_size;
+
+    return await fetchApiWithParams<Compound>('compounds/', params, ADMIN_API_BASE_URL);
+  } catch (error) {
+    console.error('Error fetching admin compounds:', error);
+    return { results: [], count: 0, next: null, previous: null };
+  }
+}
+
+export async function getCompoundById(id: string): Promise<Compound | null> {
+  try {
+    const response = await axios.get(`${API_BASE_URL}compounds/${id}/`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching compound by ID:', error);
+    return null;
+  }
+}
+
+export async function getAdminCompoundById(id: string): Promise<Compound | null> {
+  try {
+    const response = await axios.get(`${ADMIN_API_BASE_URL}compounds/${id}/`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching admin compound by ID:', error);
+    return null;
+  }
+}
+
+export async function getCompoundBySlug(slug: string): Promise<Compound | null> {
+  try {
+    const data = await fetchApiWithParams<Compound>('compounds/', { slug });
+    return data.results.length > 0 ? data.results[0] : null;
+  } catch (error) {
+    console.error('Error fetching compound by slug:', error);
+    return null;
+  }
+}
+
+export async function createCompound(data: Partial<Compound>): Promise<Compound> {
+  try {
+    const response = await axios.post(`${ADMIN_API_BASE_URL}compounds/`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating compound:', error);
+    throw error;
+  }
+}
+
+export async function updateCompound(id: number, data: Partial<Compound>): Promise<Compound> {
+  try {
+    const response = await axios.put(`${ADMIN_API_BASE_URL}compounds/${id}/`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating compound:', error);
+    throw error;
+  }
+}
+
+export async function deleteCompound(id: number): Promise<void> {
+  try {
+    await axios.delete(`${ADMIN_API_BASE_URL}compounds/${id}/`);
+  } catch (error) {
+    console.error('Error deleting compound:', error);
+    throw error;
+  }
+}
+
+// ===== DEVELOPERS API =====
+export async function getDevelopers(filters?: DeveloperFilters): Promise<ApiResponse<Developer>> {
+  try {
+    const params: Record<string, any> = {};
+
+    if (filters?.search) params.search = filters.search;
+    if (filters?.page) params.page = filters.page;
+    if (filters?.page_size) params.page_size = filters.page_size;
+
+    return await fetchApiWithParams<Developer>('developers/', params);
+  } catch (error) {
+    console.error('Error fetching developers:', error);
+    return { results: [], count: 0, next: null, previous: null };
+  }
+}
+
+export async function getAdminDevelopers(filters?: DeveloperFilters): Promise<ApiResponse<Developer>> {
+  try {
+    const params: Record<string, any> = {};
+
+    if (filters?.search) params.search = filters.search;
+    if (filters?.page) params.page = filters.page;
+    if (filters?.page_size) params.page_size = filters.page_size;
+
+    return await fetchApiWithParams<Developer>('developers/', params, ADMIN_API_BASE_URL);
+  } catch (error) {
+    console.error('Error fetching admin developers:', error);
+    return { results: [], count: 0, next: null, previous: null };
+  }
+}
+
+export async function getDeveloperById(id: string): Promise<Developer | null> {
+  try {
+    const response = await axios.get(`${API_BASE_URL}developers/${id}/`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching developer by ID:', error);
+    return null;
+  }
+}
+
+export async function getAdminDeveloperById(id: string): Promise<Developer | null> {
+  try {
+    const response = await axios.get(`${ADMIN_API_BASE_URL}developers/${id}/`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching admin developer by ID:', error);
+    return null;
+  }
+}
+
+export async function getDeveloperBySlug(slug: string): Promise<Developer | null> {
+  try {
+    const data = await fetchApiWithParams<Developer>('developers/', { slug });
+    return data.results.length > 0 ? data.results[0] : null;
+  } catch (error) {
+    console.error('Error fetching developer by slug:', error);
+    return null;
+  }
+}
+
+export async function createDeveloper(data: Partial<Developer>): Promise<Developer> {
+  try {
+    const response = await axios.post(`${ADMIN_API_BASE_URL}developers/`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating developer:', error);
+    throw error;
+  }
+}
+
+export async function updateDeveloper(id: number, data: Partial<Developer>): Promise<Developer> {
+  try {
+    const response = await axios.put(`${ADMIN_API_BASE_URL}developers/${id}/`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating developer:', error);
+    throw error;
+  }
+}
+
+export async function deleteDeveloper(id: number): Promise<void> {
+  try {
+    await axios.delete(`${ADMIN_API_BASE_URL}developers/${id}/`);
+  } catch (error) {
+    console.error('Error deleting developer:', error);
+    throw error;
+  }
+}
+
+// ===== LOCATIONS API =====
+export async function getLocations(): Promise<ApiResponse<Location>> {
+  try {
+    return await fetchApiWithParams<Location>('locations/', {});
+  } catch (error) {
+    console.error('Error fetching locations:', error);
+    return { results: [], count: 0, next: null, previous: null };
+  }
+}
+
+export async function getLocationById(id: string): Promise<Location | null> {
+  try {
+    const response = await axios.get(`${API_BASE_URL}locations/${id}/`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching location by ID:', error);
+    return null;
+  }
+}
+
+export async function getLocationBySlug(slug: string): Promise<Location | null> {
+  try {
+    const data = await fetchApiWithParams<Location>('locations/', { slug });
+    return data.results.length > 0 ? data.results[0] : null;
+  } catch (error) {
+    console.error('Error fetching location by slug:', error);
+    return null;
+  }
+}
+
+export async function createLocation(data: Partial<Location>): Promise<Location> {
+  try {
+    const response = await axios.post(`${ADMIN_API_BASE_URL}locations/`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating location:', error);
+    throw error;
+  }
+}
+
+export async function updateLocation(id: number, data: Partial<Location>): Promise<Location> {
+  try {
+    const response = await axios.put(`${ADMIN_API_BASE_URL}locations/${id}/`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating location:', error);
+    throw error;
+  }
+}
+
+export async function deleteLocation(id: number): Promise<void> {
+  try {
+    await axios.delete(`${ADMIN_API_BASE_URL}locations/${id}/`);
+  } catch (error) {
+    console.error('Error deleting location:', error);
+    throw error;
+  }
+}
+
+// ===== AMENITIES API =====
+export async function getAmenities(): Promise<ApiResponse<Amenity>> {
+  try {
+    return await fetchApiWithParams<Amenity>('amenities/', {});
+  } catch (error) {
+    console.error('Error fetching amenities:', error);
+    return { results: [], count: 0, next: null, previous: null };
+  }
+}
+
+export async function createAmenity(data: Partial<Amenity>): Promise<Amenity> {
+  try {
+    const response = await axios.post(`${ADMIN_API_BASE_URL}amenities/`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating amenity:', error);
+    throw error;
+  }
+}
+
+export async function updateAmenity(id: number, data: Partial<Amenity>): Promise<Amenity> {
+  try {
+    const response = await axios.put(`${ADMIN_API_BASE_URL}amenities/${id}/`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating amenity:', error);
+    throw error;
+  }
+}
+
+export async function deleteAmenity(id: number): Promise<void> {
+  try {
+    await axios.delete(`${ADMIN_API_BASE_URL}amenities/${id}/`);
+  } catch (error) {
+    console.error('Error deleting amenity:', error);
+    throw error;
+  }
+}
+
+// ===== BLOG POSTS API =====
+export async function getBlogPosts(filters?: BlogPostFilters): Promise<ApiResponse<BlogPost>> {
+  try {
+    const params: Record<string, any> = {};
+    
+    if (filters?.author) params.author = filters.author;
+    if (filters?.status) params.status = filters.status;
+    if (filters?.search) params.search = filters.search;
+    if (filters?.page) params.page = filters.page;
+    if (filters?.page_size) params.page_size = filters.page_size;
+    
+    return await fetchApiWithParams<BlogPost>('blog-posts/', params);
+  } catch (error) {
+    console.error('Error fetching blog posts:', error);
+    return { results: [], count: 0, next: null, previous: null };
+  }
+}
+
+export async function getAdminBlogPosts(filters?: BlogPostFilters): Promise<ApiResponse<BlogPost>> {
+  try {
+    const params: Record<string, any> = {};
+
+    if (filters?.author) params.author = filters.author;
+    if (filters?.status) params.status = filters.status;
+    if (filters?.search) params.search = filters.search;
+    if (filters?.page) params.page = filters.page;
+    if (filters?.page_size) params.page_size = filters.page_size;
+
+    return await fetchApiWithParams<BlogPost>('blog-posts/', params, ADMIN_API_BASE_URL);
+  } catch (error) {
+    console.error('Error fetching admin blog posts:', error);
+    return { results: [], count: 0, next: null, previous: null };
+  }
+}
+
+export async function getBlogPostById(id: string, useAdminApi: boolean = false): Promise<BlogPost | null> {
+  try {
+    const baseUrl = useAdminApi ? ADMIN_API_BASE_URL : API_BASE_URL;
+    const response = await axios.get(`${baseUrl}blog-posts/${id}/`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching blog post by ID:', error);
+    return null;
+  }
+}
+
+export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+  try {
+    const data = await fetchApiWithParams<BlogPost>('blog-posts/', { slug });
+    return data.results.length > 0 ? data.results[0] : null;
+  } catch (error) {
+    console.error('Error fetching blog post by slug:', error);
+    return null;
+  }
+}
+
+export async function createBlogPost(data: BlogPostInput): Promise<BlogPost> {
+  try {
+    const response = await axios.post(`${ADMIN_API_BASE_URL}blog-posts/`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating blog post:', error);
+    throw error;
+  }
+}
+
+export async function updateBlogPost(id: number, data: BlogPostInput): Promise<BlogPost> {
+  try {
+    const response = await axios.put(`${ADMIN_API_BASE_URL}blog-posts/${id}/`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating blog post:', error);
+    throw error;
+  }
+}
+
+export async function deleteBlogPost(id: number): Promise<void> {
+  try {
+    await axios.delete(`${ADMIN_API_BASE_URL}blog-posts/${id}/`);
+  } catch (error) {
+    console.error('Error deleting blog post:', error);
+    throw error;
+  }
+}
+
+// ===== AUTHORS API =====
+export async function getAuthors(): Promise<ApiResponse<Author>> {
+  try {
+    return await fetchApiWithParams<Author>('authors/', {});
+  } catch (error) {
+    console.error('Error fetching authors:', error);
+    return { results: [], count: 0, next: null, previous: null };
+  }
+}
+
+export async function getAdminAuthors(): Promise<ApiResponse<Author>> {
+  try {
+    return await fetchApiWithParams<Author>('authors/', {}, ADMIN_API_BASE_URL);
+  } catch (error) {
+    console.error('Error fetching admin authors:', error);
+    return { results: [], count: 0, next: null, previous: null };
+  }
+}
+
+export async function getBlogPostWithAdminAuthors(id: string): Promise<{ post: BlogPost | null; authors: Author[] }> {
+  const [post, authors] = await Promise.all([
+    getBlogPostById(id, true),
+    getAdminAuthors(),
+  ]);
+
+  return {
+    post,
+    authors: authors.results,
+  };
+}
+
+export async function getAuthorById(id: string): Promise<Author | null> {
+  try {
+    const response = await axios.get(`${API_BASE_URL}authors/${id}/`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching author by ID:', error);
+    return null;
+  }
+}
+
+export async function createAuthor(data: Partial<Author>): Promise<Author> {
+  try {
+    const response = await axios.post(`${ADMIN_API_BASE_URL}authors/`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating author:', error);
+    throw error;
+  }
+}
+
+export async function updateAuthor(id: number, data: Partial<Author>): Promise<Author> {
+  try {
+    const response = await axios.put(`${ADMIN_API_BASE_URL}authors/${id}/`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating author:', error);
+    throw error;
+  }
+}
+
+export async function deleteAuthor(id: number): Promise<void> {
+  try {
+    await axios.delete(`${ADMIN_API_BASE_URL}authors/${id}/`);
+  } catch (error) {
+    console.error('Error deleting author:', error);
+    throw error;
+  }
+}
+
+// ===== PARTNERS API =====
+export async function getPartners(): Promise<ApiResponse<Partner>> {
+  try {
+    return await fetchApiWithParams<Partner>('partners/', {});
+  } catch (error) {
+    console.error('Error fetching partners:', error);
+    return { results: [], count: 0, next: null, previous: null };
+  }
+}
+
+// ===== TESTIMONIALS API =====
+export async function getTestimonials(filters?: TestimonialFilters): Promise<ApiResponse<Testimonial>> {
+  try {
+    const params: Record<string, any> = {};
+    
+    if (filters?.page) params.page = filters.page;
+    if (filters?.page_size) params.page_size = filters.page_size;
+    
+    return await fetchApiWithParams<Testimonial>('testimonials/', params);
+  } catch (error) {
+    console.error('Error fetching testimonials:', error);
+    return { results: [], count: 0, next: null, previous: null };
+  }
+}
+
+// ===== CONTACT FORM SUBMISSIONS API =====
+export async function getContactSubmissions(filters?: { page?: number; page_size?: number }): Promise<ApiResponse<ContactFormSubmission>> {
+  try {
+    const params: Record<string, any> = {};
+
+    if (filters?.page) params.page = filters.page;
+    if (filters?.page_size) params.page_size = filters.page_size;
+
+    return await fetchApiWithParams<ContactFormSubmission>('contact-submissions/', params, ADMIN_API_BASE_URL);
+  } catch (error) {
+    console.error('Error fetching contact submissions:', error);
+    return { results: [], count: 0, next: null, previous: null };
+  }
+}
+
+export async function getContactSubmissionById(id: string): Promise<ContactFormSubmission | null> {
+  try {
+    const response = await axios.get(`${ADMIN_API_BASE_URL}contactformsubmissions/${id}/`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching contact submission by ID:', error);
+    return null;
+  }
+}
+
+// ===== CONTACT FORM API =====
+export async function submitContactForm(submission: Omit<ContactFormSubmission, 'id' | 'submitted_at'>): Promise<ContactFormSubmission> {
+  try {
+    const response = await axios.post(`${API_BASE_URL}contactformsubmissions/`, submission);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(`Contact form submission failed: ${error.message} - ${error.response?.statusText}`);
+    } else {
+      throw new Error(`An unexpected error occurred: ${error}`);
+    }
+  }
+}
+
+// ===== LEGACY FUNCTIONS (for backward compatibility) =====
+export async function getPosts(): Promise<BlogPost[]> {
+  const data = await getBlogPosts();
+  return data.results;
+}
+
+export async function getPost(slug: string): Promise<BlogPost | null> {
+  return getBlogPostBySlug(slug);
+}
+
+export async function getSuggestedPosts(currentPostSlug: string): Promise<BlogPost[]> {
+  const allPosts = await getPosts();
+  return allPosts.filter(post => post.slug !== currentPostSlug).sort(() => 0.5 - Math.random()).slice(0, 3);
+}
+
+export async function getDeveloper(slug: string): Promise<Developer | null> {
+  return getDeveloperBySlug(slug);
+}
+
+export async function getLocation(slug: string): Promise<Location | null> {
+  return getLocationBySlug(slug);
+}
+
+export async function getCompound(slug: string): Promise<Compound | null> {
+  return getCompoundBySlug(slug);
+}
+
+export async function getAllProperties(): Promise<Property[]> {
+  const data = await getProperties({});
+  return data.results;
+}
+
+export async function getProperty(slug: string): Promise<Property | null> {
+  return getPropertyBySlug(slug);
+}
+
+export async function getPropertyImages(propertyId: string): Promise<PropertyImage[]> {
+  try {
+    const data = await fetchApiWithParams<PropertyImage>('propertyimages/', { property: propertyId });
+    return data.results;
+  } catch (error) {
+    console.error('Error fetching property images:', error);
+    return [];
+  }
+}
