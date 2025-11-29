@@ -125,10 +125,10 @@ export async function fetchApiWithParams<T>(endpoint: string, params?: Record<st
 }
 
 // ===== PROPERTIES API =====
-export async function getProperties(filters?: PropertyFilters): Promise<ApiResponse<Property>> {
+export async function getProperties(filters?: PropertyFilters, useAdminApi: boolean = false): Promise<ApiResponse<Property>> {
   try {
     const params: Record<string, any> = {};
-    
+
     if (filters?.location) params.location = filters.location;
     if (filters?.property_type) params.property_type = filters.property_type;
     if (filters?.min_price) params.min_price = filters.min_price;
@@ -142,8 +142,9 @@ export async function getProperties(filters?: PropertyFilters): Promise<ApiRespo
     if (filters?.search) params.search = filters.search;
     if (filters?.page) params.page = filters.page;
     if (filters?.page_size) params.page_size = filters.page_size;
-    
-    return await fetchApiWithParams<Property>('properties/', params);
+
+    const baseUrl = useAdminApi ? ADMIN_API_BASE_URL : API_BASE_URL;
+    return await fetchApiWithParams<Property>('properties/', params, baseUrl);
   } catch (error) {
     console.error('Error fetching properties:', error);
     return { results: [], count: 0, next: null, previous: null };
@@ -225,15 +226,25 @@ export async function deleteProperty(id: number): Promise<void> {
 }
 
 export async function getFeaturedProperties(): Promise<ApiResponse<Property>> {
-  return getProperties({ is_featured: true });
+  try {
+    return await fetchApiWithParams<Property>('properties/', { is_featured: true }, ADMIN_API_BASE_URL);
+  } catch (error) {
+    console.error('Error fetching featured properties:', error);
+    return { results: [], count: 0, next: null, previous: null };
+  }
 }
 
 export async function getNewLaunches(): Promise<ApiResponse<Property>> {
-  return getProperties({ is_new_launch: true });
+  try {
+    return await fetchApiWithParams<Property>('properties/', { is_new_launch: true }, ADMIN_API_BASE_URL);
+  } catch (error) {
+    console.error('Error fetching new launches:', error);
+    return { results: [], count: 0, next: null, previous: null };
+  }
 }
 
 // ===== COMPOUNDS API =====
-export async function getCompounds(filters?: CompoundFilters): Promise<ApiResponse<Compound>> {
+export async function getCompounds(filters?: CompoundFilters, useAdminApi: boolean = false): Promise<ApiResponse<Compound>> {
   try {
     const params: Record<string, any> = {};
 
@@ -243,7 +254,8 @@ export async function getCompounds(filters?: CompoundFilters): Promise<ApiRespon
     if (filters?.page) params.page = filters.page;
     if (filters?.page_size) params.page_size = filters.page_size;
 
-    return await fetchApiWithParams<Compound>('compounds/', params);
+    const baseUrl = useAdminApi ? ADMIN_API_BASE_URL : API_BASE_URL;
+    return await fetchApiWithParams<Compound>('compounds/', params, baseUrl);
   } catch (error) {
     console.error('Error fetching compounds:', error);
     return { results: [], count: 0, next: null, previous: null };
@@ -327,7 +339,7 @@ export async function deleteCompound(id: number): Promise<void> {
 }
 
 // ===== DEVELOPERS API =====
-export async function getDevelopers(filters?: DeveloperFilters): Promise<ApiResponse<Developer>> {
+export async function getDevelopers(filters?: DeveloperFilters, useAdminApi: boolean = false): Promise<ApiResponse<Developer>> {
   try {
     const params: Record<string, any> = {};
 
@@ -335,7 +347,8 @@ export async function getDevelopers(filters?: DeveloperFilters): Promise<ApiResp
     if (filters?.page) params.page = filters.page;
     if (filters?.page_size) params.page_size = filters.page_size;
 
-    return await fetchApiWithParams<Developer>('developers/', params);
+    const baseUrl = useAdminApi ? ADMIN_API_BASE_URL : API_BASE_URL;
+    return await fetchApiWithParams<Developer>('developers/', params, baseUrl);
   } catch (error) {
     console.error('Error fetching developers:', error);
     return { results: [], count: 0, next: null, previous: null };
@@ -476,9 +489,10 @@ export async function deleteLocation(id: number): Promise<void> {
 }
 
 // ===== AMENITIES API =====
-export async function getAmenities(): Promise<ApiResponse<Amenity>> {
+export async function getAmenities(useAdminApi: boolean = false): Promise<ApiResponse<Amenity>> {
   try {
-    return await fetchApiWithParams<Amenity>('amenities/', {});
+    const baseURL = useAdminApi ? ADMIN_API_BASE_URL : API_BASE_URL;
+    return await fetchApiWithParams<Amenity>('amenities/', {}, baseURL);
   } catch (error) {
     console.error('Error fetching amenities:', error);
     return { results: [], count: 0, next: null, previous: null };
@@ -518,13 +532,13 @@ export async function deleteAmenity(id: number): Promise<void> {
 export async function getBlogPosts(filters?: BlogPostFilters): Promise<ApiResponse<BlogPost>> {
   try {
     const params: Record<string, any> = {};
-    
+
     if (filters?.author) params.author = filters.author;
     if (filters?.status) params.status = filters.status;
     if (filters?.search) params.search = filters.search;
     if (filters?.page) params.page = filters.page;
     if (filters?.page_size) params.page_size = filters.page_size;
-    
+
     return await fetchApiWithParams<BlogPost>('blog-posts/', params);
   } catch (error) {
     console.error('Error fetching blog posts:', error);
@@ -672,7 +686,7 @@ export async function deleteAuthor(id: number): Promise<void> {
 // ===== PARTNERS API =====
 export async function getPartners(): Promise<ApiResponse<Partner>> {
   try {
-    return await fetchApiWithParams<Partner>('partners/', {});
+    return await fetchApiWithParams<Partner>('partners/', {}, ADMIN_API_BASE_URL);
   } catch (error) {
     console.error('Error fetching partners:', error);
     return { results: [], count: 0, next: null, previous: null };
@@ -683,11 +697,11 @@ export async function getPartners(): Promise<ApiResponse<Partner>> {
 export async function getTestimonials(filters?: TestimonialFilters): Promise<ApiResponse<Testimonial>> {
   try {
     const params: Record<string, any> = {};
-    
+
     if (filters?.page) params.page = filters.page;
     if (filters?.page_size) params.page_size = filters.page_size;
-    
-    return await fetchApiWithParams<Testimonial>('testimonials/', params);
+
+    return await fetchApiWithParams<Testimonial>('testimonials/', params, ADMIN_API_BASE_URL);
   } catch (error) {
     console.error('Error fetching testimonials:', error);
     return { results: [], count: 0, next: null, previous: null };
@@ -722,7 +736,7 @@ export async function getContactSubmissionById(id: string): Promise<ContactFormS
 // ===== CONTACT FORM API =====
 export async function submitContactForm(submission: Omit<ContactFormSubmission, 'id' | 'submitted_at'>): Promise<ContactFormSubmission> {
   try {
-    const response = await axios.post(`${API_BASE_URL}contactformsubmissions/`, submission);
+    const response = await axios.post(`${API_BASE_URL}contact-submissions/`, submission);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {

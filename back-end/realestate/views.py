@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status, filters
+from rest_framework import viewsets, status, filters, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
@@ -369,6 +369,11 @@ class PublicDeveloperViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'id']
     ordering = ['name']
+
+class PublicContactFormSubmissionViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
+    queryset = ContactFormSubmission.objects.all()
+    serializer_class = ContactFormSubmissionSerializer
+    permission_classes = [AllowAny]
 
 class PublicBlogPostViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = BlogPost.objects.select_related('author').filter(status='Published')

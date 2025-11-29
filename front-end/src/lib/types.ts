@@ -109,9 +109,12 @@ export interface Partner {
 export interface Testimonial {
   id: number;
   client_name: string;
-  client_avatar: string | null;
+  client_photo?: string; // For backward compatibility
+  client_avatar?: string; // Alias for client_photo
+  testimonial_text: string; // The main testimonial content
+  quote?: string; // Alias for testimonial_text
   rating: number;
-  quote: string;
+  image?: string; // For fallback in the UI
 }
 
 // Contact Form Submission Type

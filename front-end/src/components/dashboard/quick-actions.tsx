@@ -16,7 +16,7 @@ interface QuickActionsProps {
 
 export function QuickActions({ actions }: QuickActionsProps) {
   return (
-    <Card>
+    <Card className="bg-card text-card-foreground">
       <CardHeader>
         <CardTitle>Quick Actions</CardTitle>
         <CardDescription>
@@ -28,15 +28,15 @@ export function QuickActions({ actions }: QuickActionsProps) {
           <Button
             key={action.name}
             variant="outline"
-            className="w-full justify-start h-auto p-4"
+            className="w-full justify-start h-auto p-4 hover:bg-accent/50 transition-colors"
             asChild
           >
             <Link href={action.href}>
               <div className="flex items-center space-x-3">
-                <action.icon className="h-5 w-5 text-gray-400" />
+                <action.icon className="h-5 w-5 text-muted-foreground" />
                 <div className="text-left">
-                  <div className="font-medium">{action.name}</div>
-                  <div className="text-sm text-gray-500">{action.description}</div>
+                  <div className="font-medium text-foreground">{action.name}</div>
+                  <div className="text-sm text-muted-foreground">{action.description}</div>
                 </div>
               </div>
             </Link>

@@ -27,19 +27,19 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="flex flex-col h-full bg-white border-r border-gray-200">
+    <div className="flex flex-col h-full bg-card border-r border-border transition-colors duration-200">
       {/* Logo */}
-      <div className="flex items-center h-16 px-4 border-b border-gray-200">
+      <div className="flex items-center h-16 px-4 border-b border-border">
         <div className="flex items-center">
-          <Building2 className="h-8 w-8 text-blue-600" />
-          <span className="ml-2 text-xl font-bold text-gray-900">
+          <Building2 className="h-8 w-8 text-primary" />
+          <span className="ml-2 text-xl font-bold text-foreground">
             Real Estate Hub
           </span>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-4 space-y-1">
+      <nav className="flex-1 px-2 py-4 space-y-1">
         {navigation.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -47,16 +47,18 @@ export function Sidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                'group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                'group flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-colors mx-2',
                 isActive
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
               )}
             >
               <item.icon
                 className={cn(
                   'mr-3 h-5 w-5 flex-shrink-0',
-                  isActive ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
+                  isActive 
+                    ? 'text-primary' 
+                    : 'text-muted-foreground group-hover:text-foreground'
                 )}
               />
               {item.name}

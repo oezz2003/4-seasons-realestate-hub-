@@ -51,9 +51,9 @@ export default async function Home() {
     getFeaturedProperties(),
     getTestimonials(),
     Promise.all([
-      getProperties({}),
-      getCompounds({}),
-      getDevelopers({}),
+      getProperties({}, true),  // Use admin API
+      getCompounds({}, true),   // Use admin API
+      getDevelopers({}, true),  // Use admin API
       getTestimonials()
     ])
   ]);
@@ -167,7 +167,7 @@ export default async function Home() {
                     bedrooms={property.bedrooms}
                     bathrooms={property.bathrooms}
                     area={property.area}
-                    location={property.location}
+                    location={property.location || "Unknown Location"}
                     property_type={property.property_type}
                     is_featured={property.is_featured}
                     is_new_launch={property.is_new_launch}
@@ -220,10 +220,10 @@ export default async function Home() {
             )}
           </div>
           <div className="text-center mt-12">
-             <Link href="/new-launches" passHref>
-                <Button size="lg" variant="outline">
-                    View All New Launches
-                </Button>
+            <Link href="/new-launches" passHref>
+              <Button size="lg" variant="outline">
+                View All New Launches
+              </Button>
             </Link>
           </div>
         </div>
@@ -246,7 +246,7 @@ export default async function Home() {
                     bedrooms={property.bedrooms}
                     bathrooms={property.bathrooms}
                     area={property.area}
-                    location={property.location}
+                    location={property.location || "Unknown Location"}
                     property_type={property.property_type}
                     is_featured={property.is_featured}
                     is_new_launch={property.is_new_launch}
@@ -318,7 +318,7 @@ export default async function Home() {
                 </CardContent>
               </Card>
             </div>
-             <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+            <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
               <Card className="text-center p-6 border-2 border-transparent hover:border-primary hover:shadow-lg transition-all h-full">
                 <CardContent className="flex flex-col items-center gap-4">
                   <div className="bg-primary/10 p-4 rounded-full">
@@ -329,7 +329,7 @@ export default async function Home() {
                 </CardContent>
               </Card>
             </div>
-             <div className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+            <div className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
               <Card className="text-center p-6 border-2 border-transparent hover:border-primary hover:shadow-lg transition-all h-full">
                 <CardContent className="flex flex-col items-center gap-4">
                   <div className="bg-primary/10 p-4 rounded-full">
@@ -359,8 +359,8 @@ export default async function Home() {
                     <CardContent className="p-6">
                       <div className="flex items-center mb-4">
                         <Avatar>
-                          <AvatarImage 
-                            src={getImageUrl(testimonial.client_photo, getPlaceholderImage('author'))} 
+                          <AvatarImage
+                            src={getImageUrl(testimonial.client_photo, getPlaceholderImage('author'))}
                             alt={testimonial.client_name}
                           />
                           <AvatarFallback>{testimonial.client_name[0]}</AvatarFallback>
@@ -422,17 +422,17 @@ export default async function Home() {
 
       <section className="py-20">
         <div className="container mx-auto px-4 text-center">
-            <div className="overflow-hidden py-1">
-              <h2 className="text-3xl font-bold mb-4 font-headline animate-title-reveal">Ready to Find Your Home?</h2>
-            </div>
-             <div className="overflow-hidden py-1">
-              <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto animate-title-reveal" style={{ animationDelay: '0.1s' }}>Let's get started. Browse our listings or get in touch with an agent today.</p>
-            </div>
-            <Link href="/search" passHref>
-                <Button size="lg">
-                    Search Properties
-                </Button>
-            </Link>
+          <div className="overflow-hidden py-1">
+            <h2 className="text-3xl font-bold mb-4 font-headline animate-title-reveal">Ready to Find Your Home?</h2>
+          </div>
+          <div className="overflow-hidden py-1">
+            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto animate-title-reveal" style={{ animationDelay: '0.1s' }}>Let's get started. Browse our listings or get in touch with an agent today.</p>
+          </div>
+          <Link href="/search" passHref>
+            <Button size="lg">
+              Search Properties
+            </Button>
+          </Link>
         </div>
       </section>
     </div>

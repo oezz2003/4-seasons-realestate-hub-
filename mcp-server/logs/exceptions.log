@@ -1,0 +1,276 @@
+2025-11-03T11:56:54.187Z [[31merror[39m]: uncaughtException: Cannot find module '../models/Developer'
+Require stack:
+- C:\Users\ezzal\OneDrive\Desktop\My Projects\4-seasons-realestate-hub-\mcp-server\src\controllers\developerController.js
+- C:\Users\ezzal\OneDrive\Desktop\My Projects\4-seasons-realestate-hub-\mcp-server\src\index.js
+Error: Cannot find module '../models/Developer'
+Require stack:
+- C:\Users\ezzal\OneDrive\Desktop\My Projects\4-seasons-realestate-hub-\mcp-server\src\controllers\developerController.js
+- C:\Users\ezzal\OneDrive\Desktop\My Projects\4-seasons-realestate-hub-\mcp-server\src\index.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1244:15)
+    at Function._load (node:internal/modules/cjs/loader:1070:27)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:217:24)
+    at Module.require (node:internal/modules/cjs/loader:1335:12)
+    at require (node:internal/modules/helpers:136:16)
+    at Object.<anonymous> (C:\Users\ezzal\OneDrive\Desktop\My Projects\4-seasons-realestate-hub-\mcp-server\src\controllers\developerController.js:3:19)
+    at Module._compile (node:internal/modules/cjs/loader:1562:14)
+    at Object..js (node:internal/modules/cjs/loader:1699:10)
+    at Module.load (node:internal/modules/cjs/loader:1313:32) {
+  "error": {
+    "code": "MODULE_NOT_FOUND",
+    "requireStack": [
+      "C:\\Users\\ezzal\\OneDrive\\Desktop\\My Projects\\4-seasons-realestate-hub-\\mcp-server\\src\\controllers\\developerController.js",
+      "C:\\Users\\ezzal\\OneDrive\\Desktop\\My Projects\\4-seasons-realestate-hub-\\mcp-server\\src\\index.js"
+    ]
+  },
+  "stack": "Error: Cannot find module '../models/Developer'\nRequire stack:\n- C:\\Users\\ezzal\\OneDrive\\Desktop\\My Projects\\4-seasons-realestate-hub-\\mcp-server\\src\\controllers\\developerController.js\n- C:\\Users\\ezzal\\OneDrive\\Desktop\\My Projects\\4-seasons-realestate-hub-\\mcp-server\\src\\index.js\n    at Function._resolveFilename (node:internal/modules/cjs/loader:1244:15)\n    at Function._load (node:internal/modules/cjs/loader:1070:27)\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:217:24)\n    at Module.require (node:internal/modules/cjs/loader:1335:12)\n    at require (node:internal/modules/helpers:136:16)\n    at Object.<anonymous> (C:\\Users\\ezzal\\OneDrive\\Desktop\\My Projects\\4-seasons-realestate-hub-\\mcp-server\\src\\controllers\\developerController.js:3:19)\n    at Module._compile (node:internal/modules/cjs/loader:1562:14)\n    at Object..js (node:internal/modules/cjs/loader:1699:10)\n    at Module.load (node:internal/modules/cjs/loader:1313:32)",
+  "exception": true,
+  "date": "Mon Nov 03 2025 13:56:54 GMT+0200 (Eastern European Standard Time)",
+  "process": {
+    "pid": 5848,
+    "uid": null,
+    "gid": null,
+    "cwd": "C:\\Users\\ezzal\\OneDrive\\Desktop\\My Projects\\4-seasons-realestate-hub-\\mcp-server",
+    "execPath": "C:\\Program Files\\nodejs\\node.exe",
+    "version": "v22.13.0",
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\ezzal\\OneDrive\\Desktop\\My Projects\\4-seasons-realestate-hub-\\mcp-server\\src\\index.js"
+    ],
+    "memoryUsage": {
+      "rss": 85753856,
+      "heapTotal": 39829504,
+      "heapUsed": 30055728,
+      "external": 20604842,
+      "arrayBuffers": 18262463
+    }
+  },
+  "os": {
+    "loadavg": [
+      0,
+      0,
+      0
+    ],
+    "uptime": 103466.937
+  },
+  "trace": [
+    {
+      "column": 15,
+      "file": "node:internal/modules/cjs/loader",
+      "function": "Function._resolveFilename",
+      "line": 1244,
+      "method": "_resolveFilename",
+      "native": false
+    },
+    {
+      "column": 27,
+      "file": "node:internal/modules/cjs/loader",
+      "function": "Function._load",
+      "line": 1070,
+      "method": "_load",
+      "native": false
+    },
+    {
+      "column": 14,
+      "file": "node:diagnostics_channel",
+      "function": "TracingChannel.traceSync",
+      "line": 322,
+      "method": "traceSync",
+      "native": false
+    },
+    {
+      "column": 24,
+      "file": "node:internal/modules/cjs/loader",
+      "function": "wrapModuleLoad",
+      "line": 217,
+      "method": null,
+      "native": false
+    },
+    {
+      "column": 12,
+      "file": "node:internal/modules/cjs/loader",
+      "function": "Module.require",
+      "line": 1335,
+      "method": "require",
+      "native": false
+    },
+    {
+      "column": 16,
+      "file": "node:internal/modules/helpers",
+      "function": "require",
+      "line": 136,
+      "method": null,
+      "native": false
+    },
+    {
+      "column": 19,
+      "file": "C:\\Users\\ezzal\\OneDrive\\Desktop\\My Projects\\4-seasons-realestate-hub-\\mcp-server\\src\\controllers\\developerController.js",
+      "function": null,
+      "line": 3,
+      "method": null,
+      "native": false
+    },
+    {
+      "column": 14,
+      "file": "node:internal/modules/cjs/loader",
+      "function": "Module._compile",
+      "line": 1562,
+      "method": "_compile",
+      "native": false
+    },
+    {
+      "column": 10,
+      "file": "node:internal/modules/cjs/loader",
+      "function": "Object..js",
+      "line": 1699,
+      "method": ".js",
+      "native": false
+    },
+    {
+      "column": 32,
+      "file": "node:internal/modules/cjs/loader",
+      "function": "Module.load",
+      "line": 1313,
+      "method": "load",
+      "native": false
+    }
+  ]
+}
+2025-11-03T11:57:14.143Z [[31merror[39m]: uncaughtException: Cannot find module '../models/Developer'
+Require stack:
+- C:\Users\ezzal\OneDrive\Desktop\My Projects\4-seasons-realestate-hub-\mcp-server\src\controllers\developerController.js
+- C:\Users\ezzal\OneDrive\Desktop\My Projects\4-seasons-realestate-hub-\mcp-server\src\index.js
+Error: Cannot find module '../models/Developer'
+Require stack:
+- C:\Users\ezzal\OneDrive\Desktop\My Projects\4-seasons-realestate-hub-\mcp-server\src\controllers\developerController.js
+- C:\Users\ezzal\OneDrive\Desktop\My Projects\4-seasons-realestate-hub-\mcp-server\src\index.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1244:15)
+    at Function._load (node:internal/modules/cjs/loader:1070:27)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:217:24)
+    at Module.require (node:internal/modules/cjs/loader:1335:12)
+    at require (node:internal/modules/helpers:136:16)
+    at Object.<anonymous> (C:\Users\ezzal\OneDrive\Desktop\My Projects\4-seasons-realestate-hub-\mcp-server\src\controllers\developerController.js:3:19)
+    at Module._compile (node:internal/modules/cjs/loader:1562:14)
+    at Object..js (node:internal/modules/cjs/loader:1699:10)
+    at Module.load (node:internal/modules/cjs/loader:1313:32) {
+  "error": {
+    "code": "MODULE_NOT_FOUND",
+    "requireStack": [
+      "C:\\Users\\ezzal\\OneDrive\\Desktop\\My Projects\\4-seasons-realestate-hub-\\mcp-server\\src\\controllers\\developerController.js",
+      "C:\\Users\\ezzal\\OneDrive\\Desktop\\My Projects\\4-seasons-realestate-hub-\\mcp-server\\src\\index.js"
+    ]
+  },
+  "stack": "Error: Cannot find module '../models/Developer'\nRequire stack:\n- C:\\Users\\ezzal\\OneDrive\\Desktop\\My Projects\\4-seasons-realestate-hub-\\mcp-server\\src\\controllers\\developerController.js\n- C:\\Users\\ezzal\\OneDrive\\Desktop\\My Projects\\4-seasons-realestate-hub-\\mcp-server\\src\\index.js\n    at Function._resolveFilename (node:internal/modules/cjs/loader:1244:15)\n    at Function._load (node:internal/modules/cjs/loader:1070:27)\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:217:24)\n    at Module.require (node:internal/modules/cjs/loader:1335:12)\n    at require (node:internal/modules/helpers:136:16)\n    at Object.<anonymous> (C:\\Users\\ezzal\\OneDrive\\Desktop\\My Projects\\4-seasons-realestate-hub-\\mcp-server\\src\\controllers\\developerController.js:3:19)\n    at Module._compile (node:internal/modules/cjs/loader:1562:14)\n    at Object..js (node:internal/modules/cjs/loader:1699:10)\n    at Module.load (node:internal/modules/cjs/loader:1313:32)",
+  "exception": true,
+  "date": "Mon Nov 03 2025 13:57:14 GMT+0200 (Eastern European Standard Time)",
+  "process": {
+    "pid": 15836,
+    "uid": null,
+    "gid": null,
+    "cwd": "C:\\Users\\ezzal\\OneDrive\\Desktop\\My Projects\\4-seasons-realestate-hub-\\mcp-server",
+    "execPath": "C:\\Program Files\\nodejs\\node.exe",
+    "version": "v22.13.0",
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "C:\\Users\\ezzal\\OneDrive\\Desktop\\My Projects\\4-seasons-realestate-hub-\\mcp-server\\src\\index.js"
+    ],
+    "memoryUsage": {
+      "rss": 85790720,
+      "heapTotal": 39829504,
+      "heapUsed": 30157584,
+      "external": 20604842,
+      "arrayBuffers": 18262463
+    }
+  },
+  "os": {
+    "loadavg": [
+      0,
+      0,
+      0
+    ],
+    "uptime": 103486.906
+  },
+  "trace": [
+    {
+      "column": 15,
+      "file": "node:internal/modules/cjs/loader",
+      "function": "Function._resolveFilename",
+      "line": 1244,
+      "method": "_resolveFilename",
+      "native": false
+    },
+    {
+      "column": 27,
+      "file": "node:internal/modules/cjs/loader",
+      "function": "Function._load",
+      "line": 1070,
+      "method": "_load",
+      "native": false
+    },
+    {
+      "column": 14,
+      "file": "node:diagnostics_channel",
+      "function": "TracingChannel.traceSync",
+      "line": 322,
+      "method": "traceSync",
+      "native": false
+    },
+    {
+      "column": 24,
+      "file": "node:internal/modules/cjs/loader",
+      "function": "wrapModuleLoad",
+      "line": 217,
+      "method": null,
+      "native": false
+    },
+    {
+      "column": 12,
+      "file": "node:internal/modules/cjs/loader",
+      "function": "Module.require",
+      "line": 1335,
+      "method": "require",
+      "native": false
+    },
+    {
+      "column": 16,
+      "file": "node:internal/modules/helpers",
+      "function": "require",
+      "line": 136,
+      "method": null,
+      "native": false
+    },
+    {
+      "column": 19,
+      "file": "C:\\Users\\ezzal\\OneDrive\\Desktop\\My Projects\\4-seasons-realestate-hub-\\mcp-server\\src\\controllers\\developerController.js",
+      "function": null,
+      "line": 3,
+      "method": null,
+      "native": false
+    },
+    {
+      "column": 14,
+      "file": "node:internal/modules/cjs/loader",
+      "function": "Module._compile",
+      "line": 1562,
+      "method": "_compile",
+      "native": false
+    },
+    {
+      "column": 10,
+      "file": "node:internal/modules/cjs/loader",
+      "function": "Object..js",
+      "line": 1699,
+      "method": ".js",
+      "native": false
+    },
+    {
+      "column": 32,
+      "file": "node:internal/modules/cjs/loader",
+      "function": "Module.load",
+      "line": 1313,
+      "method": "load",
+      "native": false
+    }
+  ]
+}

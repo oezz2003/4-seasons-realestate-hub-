@@ -57,10 +57,10 @@ export const authApiFunctions = {
   login: async (credentials: LoginCredentials): Promise<LoginResponse> => {
     try {
       const response = await authApi.post<LoginResponse>('auth/login/', credentials);
-      
+
       // Store token
       tokenStorage.set(response.data.token);
-      
+
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -77,7 +77,7 @@ export const authApiFunctions = {
 
   verifyToken: async (token: string): Promise<User> => {
     try {
-      const response = await authApi.get<User>('admin/users/', {
+      const response = await authApi.get<User>('auth/me/', {
         headers: {
           'Authorization': `Token ${token}`,
         },

@@ -11,20 +11,6 @@ from .views import (
     AuthorViewSet,
     BlogPostViewSet,
     PartnerViewSet,
-    TestimonialViewSet,
-    ContactFormSubmissionViewSet,
-    UserViewSet,
-    # Public viewsets
-    PublicPropertyViewSet,
-    PublicCompoundViewSet,
-    PublicDeveloperViewSet,
-    PublicBlogPostViewSet,
-    # Authentication
-    CustomAuthToken,
-    CurrentUserView,
-)
-
-# Admin API router
 admin_router = DefaultRouter()
 admin_router.register(r'developers', DeveloperViewSet)
 admin_router.register(r'locations', LocationViewSet)
@@ -45,6 +31,7 @@ public_router.register(r'properties', PublicPropertyViewSet)
 public_router.register(r'compounds', PublicCompoundViewSet)
 public_router.register(r'developers', PublicDeveloperViewSet)
 public_router.register(r'blog-posts', PublicBlogPostViewSet)
+public_router.register(r'contact-submissions', PublicContactFormSubmissionViewSet)
 
 urlpatterns = [
     # Admin API endpoints

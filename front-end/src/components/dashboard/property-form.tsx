@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchDevelopers } from '@/store/slices/developersSlice';
 import { fetchCompounds } from '@/store/slices/compoundsSlice';
+import { getAmenities } from '@/lib/api';
 import { Property, Developer, Compound, Location, Amenity } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -73,8 +74,9 @@ export function PropertyForm({ property, onSubmit, isLoading = false }: Property
     })) || []
   );
   const [selectedAmenities, setSelectedAmenities] = useState<number[]>(
-    property?.amenities?.map(amenity => amenity.id) || []
+    property?.amenities?.map((a) => (typeof a === 'number' ? a : a.id)) || []
   );
+  const [amenities, setAmenities] = useState<{value: number; label: string}[]>([]);
 
   const {
     register,
@@ -95,21 +97,52 @@ export function PropertyForm({ property, onSubmit, isLoading = false }: Property
       compound: property?.compound?.id || undefined,
       developer: property?.developer?.id || undefined,
       location: property?.location?.id || undefined,
-      amenities: property?.amenities?.map(amenity => amenity.id) || [],
+      amenities: property?.amenities?.map((a) => (typeof a === 'number' ? a : a.id)) || [],
       is_featured: property?.is_featured || false,
       is_new_launch: property?.is_new_launch || false,
     },
   });
 
   useEffect(() => {
-    dispatch(fetchDevelopers({ page: 1, filters: {} }));
-    dispatch(fetchCompounds({ page: 1, filters: {} }));
-  }, [dispatch]);
+    if (!developers.length) {
+      dispatch(fetchDevelopers({ page: 1, filters: {} }));
+    }
+    if (!compounds.length) {
+      dispatch(fetchCompounds({ page: 1, filters: {} }));
+    }
+    
+    // Fetch amenities using admin API
+    const loadAmenities = async () => {
+      try {
+        const data = await getAmenities(true); // Use admin API
+        console.log('Fetched amenities:', data);
+        setAmenities(data.results.map(amenity => ({
+          value: amenity.id,
+          label: amenity.name
+        })));
+      } catch (error) {
+        console.error('Error loading amenities:', error);
+        // Fallback to empty array if there's an error
+        setAmenities([]);
+      }
+    };
+    
+    loadAmenities();
+  }, [dispatch, developers.length, compounds.length]);
+
+  // Update form value when selectedAmenities changes
+  useEffect(() => {
+    setValue('amenities', selectedAmenities);
+  }, [selectedAmenities, setValue]);
 
   const handleFormSubmit = (data: PropertyFormData) => {
     const filteredData = Object.fromEntries(
-      Object.entries(data).filter(([_, value]) => value !== undefined)
+      Object.entries({
+        ...data,
+        amenities: selectedAmenities,
+      }).filter(([_, value]) => value !== undefined && value !== '')
     ) as PropertyFormData;
+    
     onSubmit({
       ...filteredData,
       main_image: mainImage || undefined,
@@ -295,7 +328,7 @@ export function PropertyForm({ property, onSubmit, isLoading = false }: Property
             <div className="space-y-2">
               <Label htmlFor="amenities">Amenities</Label>
               <MultiSelect
-                options={[]} // TODO: Add amenities from API
+                options={amenities}
                 selectedValues={selectedAmenities}
                 onChange={setSelectedAmenities}
                 placeholder="Select amenities"

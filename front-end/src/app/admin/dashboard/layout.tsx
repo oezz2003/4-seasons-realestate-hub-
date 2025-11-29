@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { TopBar } from '@/components/dashboard/top-bar';
 import { Breadcrumbs } from '@/components/dashboard/breadcrumbs';
 import { Button } from '@/components/ui/button';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Sun, Moon } from 'lucide-react';
 
 export default function DashboardLayout({
   children,
@@ -16,6 +17,7 @@ export default function DashboardLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isAuthenticated, isLoading } = useAuth();
+  const { theme, setTheme } = useTheme();
   const router = useRouter();
 
   useEffect(() => {
@@ -26,19 +28,19 @@ export default function DashboardLayout({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-foreground"></div>
       </div>
     );
   }
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
-          <p className="text-gray-600 mb-4">You need to be logged in to access this page.</p>
-          <Button onClick={() => window.location.href = '/admin/login'}>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center p-6 bg-card rounded-lg shadow-md max-w-md w-full mx-4">
+          <h2 className="text-2xl font-bold text-foreground mb-4">Access Denied</h2>
+          <p className="text-muted-foreground mb-6">You need to be logged in to access this page.</p>
+          <Button onClick={() => window.location.href = '/admin/login'} className="w-full">
             Go to Login
           </Button>
         </div>
@@ -46,8 +48,12 @@ export default function DashboardLayout({
     );
   }
 
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-200">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
