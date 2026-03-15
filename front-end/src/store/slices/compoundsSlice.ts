@@ -38,7 +38,7 @@ export const fetchCompounds = createAsyncThunk(
     try {
       const state = getState() as { auth: { token: string | null } };
       const token = state.auth.token;
-      
+
       if (!token) {
         return rejectWithValue('No authentication token');
       }
@@ -49,11 +49,7 @@ export const fetchCompounds = createAsyncThunk(
         ...Object.fromEntries(Object.entries(filters).filter(([_, value]) => value !== null && value !== '')),
       });
 
-      const response = await fetch(`http://127.0.0.1:8000/api/admin/compounds/?${queryParams}`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-        },
-      });
+      const response = await fetch(`/api/compounds/?${queryParams}`);
 
       if (!response.ok) {
         return rejectWithValue('Failed to fetch compounds');
@@ -73,16 +69,12 @@ export const fetchCompound = createAsyncThunk(
     try {
       const state = getState() as { auth: { token: string | null } };
       const token = state.auth.token;
-      
+
       if (!token) {
         return rejectWithValue('No authentication token');
       }
 
-      const response = await fetch(`http://127.0.0.1:8000/api/admin/compounds/${id}/`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-        },
-      });
+      const response = await fetch(`/api/compounds/${id}/`);
 
       if (!response.ok) {
         return rejectWithValue('Failed to fetch compound');
@@ -102,16 +94,15 @@ export const createCompound = createAsyncThunk(
     try {
       const state = getState() as { auth: { token: string | null } };
       const token = state.auth.token;
-      
+
       if (!token) {
         return rejectWithValue('No authentication token');
       }
 
-      const response = await fetch('http://127.0.0.1:8000/api/admin/compounds/', {
+      const response = await fetch('/api/compounds/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Token ${token}`,
         },
         body: JSON.stringify(compoundData),
       });
@@ -135,16 +126,15 @@ export const updateCompound = createAsyncThunk(
     try {
       const state = getState() as { auth: { token: string | null } };
       const token = state.auth.token;
-      
+
       if (!token) {
         return rejectWithValue('No authentication token');
       }
 
-      const response = await fetch(`http://127.0.0.1:8000/api/admin/compounds/${id}/`, {
+      const response = await fetch(`/api/compounds/${id}/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Token ${token}`,
         },
         body: JSON.stringify(data),
       });
@@ -168,16 +158,13 @@ export const deleteCompound = createAsyncThunk(
     try {
       const state = getState() as { auth: { token: string | null } };
       const token = state.auth.token;
-      
+
       if (!token) {
         return rejectWithValue('No authentication token');
       }
 
-      const response = await fetch(`http://127.0.0.1:8000/api/admin/compounds/${id}/`, {
+      const response = await fetch(`/api/compounds/${id}/`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Token ${token}`,
-        },
       });
 
       if (!response.ok) {

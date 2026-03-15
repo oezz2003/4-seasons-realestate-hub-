@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Property } from '@/lib/types';
 
-const ADMIN_API_BASE_URL = process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL || 'http://127.0.0.1:8000/api/admin/';
+const ADMIN_API_BASE_URL = '/api/';
 
 interface PropertiesState {
   properties: Property[];
@@ -86,7 +86,6 @@ export const fetchProperties = createAsyncThunk(
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Token ${token}`,
         },
       });
 
@@ -111,16 +110,12 @@ export const fetchProperty = createAsyncThunk(
     try {
       const state = getState() as { auth: { token: string | null } };
       const token = state.auth.token;
-      
+
       if (!token) {
         return rejectWithValue('No authentication token');
       }
 
-      const response = await fetch(`http://127.0.0.1:8000/api/admin/properties/${id}/`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-        },
-      });
+      const response = await fetch(`/api/properties/${id}/`);
 
       if (!response.ok) {
         return rejectWithValue('Failed to fetch property');
@@ -140,16 +135,15 @@ export const createProperty = createAsyncThunk(
     try {
       const state = getState() as { auth: { token: string | null } };
       const token = state.auth.token;
-      
+
       if (!token) {
         return rejectWithValue('No authentication token');
       }
 
-      const response = await fetch('http://127.0.0.1:8000/api/admin/properties/', {
+      const response = await fetch('/api/properties/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Token ${token}`,
         },
         body: JSON.stringify(propertyData),
       });
@@ -173,16 +167,15 @@ export const updateProperty = createAsyncThunk(
     try {
       const state = getState() as { auth: { token: string | null } };
       const token = state.auth.token;
-      
+
       if (!token) {
         return rejectWithValue('No authentication token');
       }
 
-      const response = await fetch(`http://127.0.0.1:8000/api/admin/properties/${id}/`, {
+      const response = await fetch(`/api/properties/${id}/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Token ${token}`,
         },
         body: JSON.stringify(data),
       });
@@ -206,16 +199,13 @@ export const deleteProperty = createAsyncThunk(
     try {
       const state = getState() as { auth: { token: string | null } };
       const token = state.auth.token;
-      
+
       if (!token) {
         return rejectWithValue('No authentication token');
       }
 
-      const response = await fetch(`http://127.0.0.1:8000/api/admin/properties/${id}/`, {
+      const response = await fetch(`/api/properties/${id}/`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Token ${token}`,
-        },
       });
 
       if (!response.ok) {

@@ -10,21 +10,16 @@ A comprehensive real estate platform built with a modern tech stack, featuring a
 
 ## 🛠 Tech Stack
 
-### Frontend
-- **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
+### Frontend & Backend (Unified)
+- **Framework**: [Next.js 14/15](https://nextjs.org/) (App Router)
 - **Language**: TypeScript
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **UI Components**: [shadcn/ui](https://ui.shadcn.com/)
 - **State Management**: [Redux Toolkit](https://redux-toolkit.js.org/)
-- **Form Handling**: React Hook Form + Zod
+- **Database ORM**: [Prisma v7](https://www.prisma.io/)
+- **Database**: PostgreSQL
+- **Authentication**: [NextAuth.js (Auth.js)](https://next-auth.js.org/) (Credentials Provider)
 - **Icons**: Lucide React
-
-### Backend
-- **Framework**: [Django 5](https://www.djangoproject.com/)
-- **API**: Django REST Framework (DRF)
-- **Database**: SQLite (Development) / PostgreSQL (Production ready)
-- **Authentication**: Token-based Authentication (DRF Auth Token)
-- **Image Handling**: Pillow
 
 ---
 
@@ -32,58 +27,11 @@ A comprehensive real estate platform built with a modern tech stack, featuring a
 
 ### Prerequisites
 - **Node.js**: v18 or higher
-- **Python**: v3.10 or higher
-- **pip**: Python package manager
+- **PostgreSQL**: A running instance (local or remote)
 
-### 1. Backend Setup
+### Project Setup
 
-1.  Navigate to the backend directory:
-    ```bash
-    cd back-end
-    ```
-
-2.  Create and activate a virtual environment:
-    ```bash
-    # Windows
-    python -m venv venv
-    .\venv\Scripts\activate
-
-    # macOS/Linux
-    python3 -m venv venv
-    source venv/bin/activate
-    ```
-
-3.  Install dependencies:
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-4.  Apply database migrations:
-    ```bash
-    python manage.py migrate
-    ```
-
-5.  Create a superuser (Admin):
-    ```bash
-    # Run the helper script
-    python create_admin_user.py
-    
-    # OR manually
-    python manage.py createsuperuser
-    ```
-    > **Default Credentials:**
-    > - **Username:** `admin`
-    > - **Password:** `admin123`
-
-6.  Start the development server:
-    ```bash
-    python manage.py runserver
-    ```
-    The backend will run at `http://127.0.0.1:8000`.
-
-### 2. Frontend Setup
-
-1.  Navigate to the frontend directory:
+1.  Navigate to the frontend directory (which now houses the fullstack application):
     ```bash
     cd front-end
     ```
@@ -93,97 +41,96 @@ A comprehensive real estate platform built with a modern tech stack, featuring a
     npm install
     ```
 
-3.  Start the development server:
+3.  Configure Environment Variables:
+    - Copy `.env.example` to `.env` (or create a `.env` file).
+    - Ensure your `DATABASE_URL` is set to your PostgreSQL instance.
+    - Set `NEXTAUTH_SECRET` and `NEXTAUTH_URL`.
+
+4.  Sync Database Schema:
+    ```bash
+    npx prisma db push
+    # OR 
+    npx prisma migrate dev
+    ```
+
+5.  Seed the Database (Create Default Admin):
+    ```bash
+    npx tsx prisma/seed.ts
+    ```
+    > **Default Admin Credentials:**
+    > - **Email:** `admin@admin.com`
+    > - **Password:** `password`
+
+6.  Start the development server:
     ```bash
     npm run dev
     ```
-    The frontend will run at `http://localhost:3000`.
+    The application will run at `http://localhost:3000`.
 
 ---
 
 ## 📂 Project Structure
 
-### Backend (`/back-end`)
-- **`mysite/`**: Project configuration (settings, urls, wsgi).
-- **`realestate/`**: Main application app.
-    - **`models.py`**: Database schemas (Property, Compound, Developer, etc.).
-    - **`views.py`**: API logic and ViewSets.
-    - **`serializers.py`**: Data serialization for APIs.
-    - **`urls.py`**: API route definitions.
-    - **`admin.py`**: Django Admin configuration.
-- **`media/`**: User-uploaded files (images).
-- **`manage.py`**: Django command-line utility.
-
-### Frontend (`/front-end`)
-- **`src/app/`**: Next.js App Router pages.
+### Fullstack Next.js Application (`/front-end`)
+- **`prisma/`**: Prisma schema, migrations, and seed scripts.
+    - **`schema.prisma`**: Database models definition.
+    - **`seed.ts`**: Script to generate initial database records.
+- **`src/app/`**: Next.js App Router root.
     - **`(public)/`**: Public-facing pages (Home, Properties, Blog).
-    - **`admin/`**: Admin dashboard routes (protected).
+    - **`admin/`**: Admin dashboard frontend (protected routes).
+    - **`api/`**: Next.js API Routes (Backend logic and data fetching).
 - **`src/components/`**: Reusable UI components.
-    - **`ui/`**: Shadcn UI primitives (Button, Input, Card, etc.).
-    - **`dashboard/`**: Admin-specific components (Sidebar, Tables, Forms).
-- **`src/lib/`**: Utilities.
-    - **`api.ts`**: Main API client and interceptors.
-    - **`auth-api.ts`**: Authentication specific API logic.
+    - **`ui/`**: Shadcn UI primitives.
+    - **`dashboard/`**: Admin-specific components.
+- **`src/lib/`**: Utilities and configurations.
+    - **`prisma.ts`**: Prisma Client singleton.
+    - **`api.ts` & `admin-api.ts`**: Axios clients pointing to local `/api`.
     - **`types.ts`**: TypeScript interfaces.
-- **`src/store/`**: Redux store and slices.
 
 ---
 
 ## 🔑 Key Features & Functions
 
 ### Authentication
-- **Login**: `/admin/login`
-- **Protection**: Admin routes are protected by `DashboardLayout` and API interceptors.
-- **Token**: Stored in `localStorage` and automatically injected into `Authorization` headers.
+- **Provider**: NextAuth.js (Credentials)
+- **Login Endpoint**: `/admin/login`
+- **Protection**: Admin routes verify active `next-auth` server sessions.
+- **Passwords**: Securely hashed with `bcryptjs`.
 
 ### Dashboard Modules
 - **Properties**: Full CRUD. Manage listings, images, and details.
 - **Compounds**: Manage projects and link them to developers.
 - **Developers**: Manage real estate companies.
-- **Blog**: CMS for publishing articles.
-- **Settings**: Manage Amenities, Authors, Locations, Partners, and Testimonials.
+- **Blog & Authors**: CMS for publishing articles.
+- **Settings**: Manage Amenities, Locations, Partners, and Testimonials.
 - **Contacts**: View submissions from the public contact form.
+- **File Uploads**: Admin files are saved securely via `/api/upload/image`.
 
 ---
 
 ## 🚀 Production vs. Development
 
 ### Development
-- **Debug Mode**: `DEBUG = True` in Django settings.
-- **Frontend**: `npm run dev` with Hot Module Replacement (HMR).
-- **Database**: SQLite (`db.sqlite3`).
+- **Database**: Local SQLite or separate Postgres dev database.
+- **Run Command**: `npm run dev`
 
 ### Production
-1.  **Backend Settings**:
-    - Set `DEBUG = False`.
-    - Set `ALLOWED_HOSTS` to your domain.
-    - Configure a production database (PostgreSQL recommended).
-    - Set `CORS_ALLOWED_ORIGINS` to your frontend domain.
-
-2.  **Static Files**:
-    ```bash
-    python manage.py collectstatic
-    ```
-
-3.  **Frontend Build**:
+1.  **Build**:
     ```bash
     npm run build
+    ```
+2.  **Start Server**:
+    ```bash
     npm start
     ```
-
-4.  **Deployment**:
-    - **Frontend**: Vercel, Netlify, or Docker.
-    - **Backend**: DigitalOcean, AWS, Heroku, or Docker.
+3.  **Deployment**: Any Node.js compatible host like Vercel, DigitalOcean App Platform, Render, or Docker containers.
 
 ---
 
 ## 📝 API Documentation
 
-The API is structured into two main namespaces:
-- **`/api/public/`**: Read-only endpoints for the public website.
-- **`/api/admin/`**: Protected endpoints for the dashboard (requires Token).
-
-Key Endpoints:
-- `GET /api/public/properties/`: List all properties.
-- `POST /api/auth/login/`: Obtain auth token.
-- `GET /api/auth/me/`: Verify token and get user info.
+All data logic is seamlessly integrated into Next.js Route Handlers located in `src/app/api/`.
+Key endpoints:
+- `GET /api/properties`: Fetch property listings.
+- `POST /api/upload/image`: Secure file upload endpoint.
+- `GET /api/auth/session`: Retrieve the current user session context.

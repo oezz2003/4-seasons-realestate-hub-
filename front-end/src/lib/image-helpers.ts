@@ -1,27 +1,27 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
-const API_ORIGIN = new URL(API_BASE_URL).origin;
+const getOrigin = () => {
+  if (typeof window !== 'undefined') return window.location.origin;
+  return ''; // Relative for SSR
+};
+
+const API_ORIGIN = getOrigin();
 
 export function getImageUrl(imagePath: string | null | undefined, fallback?: string): string {
   if (!imagePath) return fallback || 'https://placehold.co/800x600.png';
-  
+
   // If already a full URL (Unsplash, external), return as-is
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
     return imagePath;
   }
-  
-  // Normalize relative media paths (strip duplicated prefixes or slashes)
-  let normalizedPath = imagePath.replace(/\\/g, '/');
 
-  if (normalizedPath.startsWith('/api/')) {
-    normalizedPath = normalizedPath.replace(/^\/api\/+/i, '/');
-  }
+  // Normalize relative media paths
+  let normalizedPath = imagePath.replace(/\\/g, '/');
 
   if (!normalizedPath.startsWith('/')) {
     normalizedPath = `/${normalizedPath}`;
   }
 
+  // Handle potential duplicated slashes
   normalizedPath = normalizedPath.replace(/\/+/g, '/');
-  normalizedPath = normalizedPath.replace(/^\/media\/media\//, '/media/');
 
   return `${API_ORIGIN}${normalizedPath}`;
 }
@@ -42,43 +42,43 @@ export function formatPrice(price: string | number): string {
   if (typeof price === 'number') {
     return `EGP ${price.toLocaleString()}`;
   }
-  
+
   // If it's already a string, check if it contains numbers
   const numericPrice = parseFloat(price);
   if (!isNaN(numericPrice)) {
     return `EGP ${numericPrice.toLocaleString()}`;
   }
-  
+
   return price; // Return as-is if it's not a number
 }
 
 export function getLocationName(location: string | { name: string } | null | undefined): string {
   if (!location) return 'N/A';
-  
+
   if (typeof location === 'string') {
     return location;
   }
-  
+
   return location.name || 'N/A';
 }
 
 export function getDeveloperName(developer: string | { name: string } | null | undefined): string {
   if (!developer) return 'N/A';
-  
+
   if (typeof developer === 'string') {
     return developer;
   }
-  
+
   return developer.name || 'N/A';
 }
 
 export function getCompoundName(compound: string | { name: string } | null | undefined): string {
   if (!compound) return 'N/A';
-  
+
   if (typeof compound === 'string') {
     return compound;
   }
-  
+
   return compound.name || 'N/A';
 }
 

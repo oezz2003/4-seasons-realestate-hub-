@@ -8,12 +8,15 @@ import { PageTransitionProvider } from '@/components/layout/page-transition-prov
 import { ThemeProvider } from '@/components/layout/theme-provider';
 import ClickSpark from '@/components/click-spark';
 import { ReduxProvider } from '@/components/providers/redux-provider';
+import { NextAuthProvider } from '@/components/providers/next-auth-provider';
 import { PublicLayoutWrapper } from '@/components/layout/public-layout-wrapper';
 
 export const metadata: Metadata = {
   title: 'Four Seasons Real Estate Hub',
   description: 'Your premier destination for finding the perfect property.',
 };
+
+export const dynamic = 'force-dynamic';
 
 export default function RootLayout({
   children,
@@ -36,21 +39,23 @@ export default function RootLayout({
         )}
       >
         <ReduxProvider>
-          <ThemeProvider
+          <NextAuthProvider>
+            <ThemeProvider
               attribute="class"
               defaultTheme="system"
               enableSystem
               disableTransitionOnChange
-          >
-            <ClickSpark>
-              <PageTransitionProvider>
-                <PublicLayoutWrapper>
-                  {children}
-                </PublicLayoutWrapper>
-              </PageTransitionProvider>
-              <Toaster />
-            </ClickSpark>
-          </ThemeProvider>
+            >
+              <ClickSpark>
+                <PageTransitionProvider>
+                  <PublicLayoutWrapper>
+                    {children}
+                  </PublicLayoutWrapper>
+                </PageTransitionProvider>
+                <Toaster />
+              </ClickSpark>
+            </ThemeProvider>
+          </NextAuthProvider>
         </ReduxProvider>
       </body>
     </html>

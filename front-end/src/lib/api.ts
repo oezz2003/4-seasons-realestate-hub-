@@ -1,8 +1,15 @@
 import axios from 'axios';
 import { BlogPost, Author, Amenity, Location, Developer, Compound, Property, PropertyImage, Partner, Testimonial, ContactFormSubmission } from './types';
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000/api/public/').replace(/\/+$|\/+(?=\?)/g, '/');
-const ADMIN_API_BASE_URL = (process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL || 'http://127.0.0.1:8000/api/admin/').replace(/\/+$|\/+(?=\?)/g, '/');
+const getBaseUrl = () => {
+  if (typeof window !== 'undefined') return ''; // Browser uses relative path
+  if (process.env.NEXTAUTH_URL) return process.env.NEXTAUTH_URL;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return 'http://127.0.0.1:3000'; // Fallback for local SSR
+};
+
+const API_BASE_URL = `${getBaseUrl()}/api/`;
+const ADMIN_API_BASE_URL = `${getBaseUrl()}/api/`;
 
 // Token storage utility
 const getAuthToken = (): string | null => {

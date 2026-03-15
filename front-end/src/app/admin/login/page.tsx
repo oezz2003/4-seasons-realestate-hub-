@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAppDispatch } from '@/store/hooks';
-import { login } from '@/store/slices/authSlice';
+import { signIn } from 'next-auth/react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 
 const loginSchema = z.object({
-  username: z.string().min(1, 'Username is required'),
+  email: z.string().email('Invalid email address'),
   password: z.string().min(1, 'Password is required'),
 });
 
@@ -26,16 +26,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  const dispatch = useAppDispatch();
-  const router = useRouter();
-  const { isAuthenticated } = useAuth();
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.replace('/admin/dashboard');
-    }
-  }, [isAuthenticated, router]);
+  const router = useRouter();
 
   const {
     register,
@@ -50,13 +42,16 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const result = await dispatch(login(data));
-      
-      if (login.fulfilled.match(result)) {
+      const result = await signIn('credentials', {
+        redirect: false,
+        email: data.email,
+        password: data.password,
+      });
 
-        window.location.href = '/admin/dashboard';
+      if (result?.error) {
+        setError('Invalid email or password');
       } else {
-        setError(result.payload as string);
+        window.location.href = '/admin/dashboard';
       }
     } catch (err) {
       setError('An unexpected error occurred');
@@ -94,17 +89,17 @@ export default function LoginPage() {
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
+                  <Label htmlFor="email">Email</Label>
                   <Input
-                    id="username"
-                    type="text"
-                    {...register('username')}
-                    className={errors.username ? 'border-red-500' : ''}
-                    placeholder="Enter your username"
+                    id="email"
+                    type="email"
+                    {...register('email')}
+                    className={errors.email ? 'border-red-500' : ''}
+                    placeholder="Enter your email"
                     suppressHydrationWarning
                   />
-                  {errors.username && (
-                    <p className="text-sm text-red-500">{errors.username.message}</p>
+                  {errors.email && (
+                    <p className="text-sm text-red-500">{errors.email.message}</p>
                   )}
                 </div>
 

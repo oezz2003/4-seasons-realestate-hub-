@@ -18,7 +18,7 @@ interface PropertyCardProps {
   baths?: number;
   bathrooms?: number; // From API
   area: number;
-  location: string | { name: string }; // Handle both
+  location: string | { name: string } | null; // Handle both
   property_type?: string; // From API
   is_featured?: boolean; // From API
   is_new_launch?: boolean; // From API
@@ -31,12 +31,12 @@ export function PropertyCard(props: PropertyCardProps) {
     props.main_image || props.image,
     getPlaceholderImage('property')
   );
-  
+
   const beds = props.bedrooms || props.beds || 0;
   const baths = props.bathrooms || props.baths || 0;
   const locationName = getLocationName(props.location);
   const formattedPrice = formatPrice(props.price);
-  
+
   return (
     <Link href={`/properties/${props.id}`} className="group h-full flex">
       <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col w-full group-hover:border-primary">
@@ -50,7 +50,7 @@ export function PropertyCard(props: PropertyCardProps) {
               className="object-cover"
             />
           </div>
-          
+
           {/* Feature badges */}
           <div className="absolute top-2 left-2 flex gap-1">
             {props.is_featured && (
@@ -67,7 +67,7 @@ export function PropertyCard(props: PropertyCardProps) {
             )}
           </div>
         </CardHeader>
-        
+
         <CardContent className="p-4 flex-grow">
           <div className="flex flex-col gap-2 mb-2">
             <Badge variant="secondary" className="w-fit">{locationName}</Badge>
@@ -75,9 +75,9 @@ export function PropertyCard(props: PropertyCardProps) {
               <Badge variant="outline" className="w-fit text-xs">{props.property_type}</Badge>
             )}
           </div>
-          
+
           <CardTitle className="text-xl font-bold font-headline mb-2">{props.title}</CardTitle>
-          
+
           {/* Show compound or developer info if available */}
           {(props.compound || props.developer) && (
             <div className="text-sm text-muted-foreground mb-2">
@@ -89,10 +89,10 @@ export function PropertyCard(props: PropertyCardProps) {
               )}
             </div>
           )}
-          
+
           <p className="text-2xl font-bold text-primary mb-4">{formattedPrice}</p>
         </CardContent>
-        
+
         <CardFooter className="p-4 bg-primary/5 flex justify-between text-sm text-muted-foreground mt-auto">
           <div className="flex items-center gap-1">
             <BedDouble className="w-4 h-4 text-primary" />

@@ -1,18 +1,18 @@
 import axios from 'axios';
-import { 
-  Property, 
-  Compound, 
-  Developer, 
-  BlogPost, 
-  Location, 
-  Amenity, 
-  Author, 
-  Partner, 
-  Testimonial, 
-  ContactFormSubmission 
+import {
+  Property,
+  Compound,
+  Developer,
+  BlogPost,
+  Location,
+  Amenity,
+  Author,
+  Partner,
+  Testimonial,
+  ContactFormSubmission
 } from './types';
 
-const ADMIN_API_BASE_URL = process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL || 'http://127.0.0.1:8000/api/admin/';
+const ADMIN_API_BASE_URL = process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL || '/api/';
 
 // Create axios instance with default config
 const adminApi = axios.create({
@@ -300,7 +300,7 @@ export const uploadApi = {
     const formData = new FormData();
     formData.append('image', file);
     formData.append('type', type);
-    
+
     const response = await adminApi.post('/upload/image/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -314,7 +314,7 @@ export const uploadApi = {
       formData.append('image', file);
     });
     formData.append('type', type);
-    
+
     const response = await adminApi.post('/upload/image/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',

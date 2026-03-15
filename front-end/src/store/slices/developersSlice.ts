@@ -32,7 +32,7 @@ export const fetchDevelopers = createAsyncThunk(
     try {
       const state = getState() as { auth: { token: string | null } };
       const token = state.auth.token;
-      
+
       if (!token) {
         return rejectWithValue('No authentication token');
       }
@@ -43,11 +43,7 @@ export const fetchDevelopers = createAsyncThunk(
         ...Object.fromEntries(Object.entries(filters).filter(([_, value]) => value !== null && value !== '')),
       });
 
-      const response = await fetch(`http://127.0.0.1:8000/api/admin/developers/?${queryParams}`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-        },
-      });
+      const response = await fetch(`/api/developers/?${queryParams}`);
 
       if (!response.ok) {
         return rejectWithValue('Failed to fetch developers');
@@ -67,16 +63,12 @@ export const fetchDeveloper = createAsyncThunk(
     try {
       const state = getState() as { auth: { token: string | null } };
       const token = state.auth.token;
-      
+
       if (!token) {
         return rejectWithValue('No authentication token');
       }
 
-      const response = await fetch(`http://127.0.0.1:8000/api/admin/developers/${id}/`, {
-        headers: {
-          'Authorization': `Token ${token}`,
-        },
-      });
+      const response = await fetch(`/api/developers/${id}/`);
 
       if (!response.ok) {
         return rejectWithValue('Failed to fetch developer');
@@ -96,16 +88,15 @@ export const createDeveloper = createAsyncThunk(
     try {
       const state = getState() as { auth: { token: string | null } };
       const token = state.auth.token;
-      
+
       if (!token) {
         return rejectWithValue('No authentication token');
       }
 
-      const response = await fetch('http://127.0.0.1:8000/api/admin/developers/', {
+      const response = await fetch('/api/developers/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Token ${token}`,
         },
         body: JSON.stringify(developerData),
       });
@@ -129,16 +120,15 @@ export const updateDeveloper = createAsyncThunk(
     try {
       const state = getState() as { auth: { token: string | null } };
       const token = state.auth.token;
-      
+
       if (!token) {
         return rejectWithValue('No authentication token');
       }
 
-      const response = await fetch(`http://127.0.0.1:8000/api/admin/developers/${id}/`, {
+      const response = await fetch(`/api/developers/${id}/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Token ${token}`,
         },
         body: JSON.stringify(data),
       });
@@ -162,16 +152,13 @@ export const deleteDeveloper = createAsyncThunk(
     try {
       const state = getState() as { auth: { token: string | null } };
       const token = state.auth.token;
-      
+
       if (!token) {
         return rejectWithValue('No authentication token');
       }
 
-      const response = await fetch(`http://127.0.0.1:8000/api/admin/developers/${id}/`, {
+      const response = await fetch(`/api/developers/${id}/`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Token ${token}`,
-        },
       });
 
       if (!response.ok) {

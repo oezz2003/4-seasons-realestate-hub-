@@ -1,34 +1,20 @@
-'use client';
-
-import { useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { verifyToken, logout } from '@/store/slices/authSlice';
-import { tokenStorage } from '@/lib/auth-api';
+import { useSession, signOut } from 'next-auth/react';
 
 export function useAuth() {
-  const dispatch = useAppDispatch();
-  const { user, token, isAuthenticated, isLoading, error } = useAppSelector((state) => state.auth);
+  const { data: session, status } = useSession();
 
-  // Check for existing token on mount
-  useEffect(() => {
-    const storedToken = tokenStorage.get();
-    if (storedToken && !isAuthenticated && !isLoading) {
-      dispatch(verifyToken(storedToken));
-    }
-  }, [dispatch, isAuthenticated, isLoading]);
+  const isAuthenticated = status === 'authenticated';
+  const isLoading = status === 'loading';
+  const user = session?.user;
 
-  const handleLogout = () => {
-    dispatch(logout());
-    // Clear any additional stored data
-    localStorage.removeItem('authToken');
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: '/admin/login' });
   };
 
   return {
     user,
-    token,
     isAuthenticated,
     isLoading,
-    error,
     logout: handleLogout,
   };
 }
