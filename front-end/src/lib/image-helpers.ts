@@ -8,19 +8,43 @@ const API_ORIGIN = getOrigin();
 export function getImageUrl(imagePath: string | null | undefined, fallback?: string): string {
   if (!imagePath) return fallback || 'https://placehold.co/800x600.png';
 
-  // If already a full URL (Unsplash, external), return as-is
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-    return imagePath;
+  let path = String(imagePath).trim();
+
+  // If the path is corrupted with a leading slash before a protocol (e.g., /http:/...)
+  // Strip the leading slash(es)
+  if (path.match(/^\/+https?:\//) || path.match(/^\/+blob:/) || path.match(/^\/+data:/)) {
+    path = path.replace(/^\/+/, '');
+  }
+
+  // Fix common single-slash corruption (http:/ -> http://)
+  // This must happen BEFORE the absolute check
+  if (path.match(/^https?:\/(?!\/)/)) {
+    path = path.replace(/^(https?):\/([^\/])/, '$1://$2');
+  }
+
+  // If already a full URL or special protocol, return as-is
+  if (
+    path.includes('://') || 
+    path.startsWith('//') || 
+    path.startsWith('data:') || 
+    path.startsWith('blob:')
+  ) {
+    // Next.js <Image> doesn't support // protocol-relative URLs
+    if (path.startsWith('//')) {
+      const protocol = typeof window !== 'undefined' ? window.location.protocol : 'http:';
+      return `${protocol}${path}`;
+    }
+    return path;
   }
 
   // Normalize relative media paths
-  let normalizedPath = imagePath.replace(/\\/g, '/');
+  let normalizedPath = path.replace(/\\/g, '/');
 
   if (!normalizedPath.startsWith('/')) {
     normalizedPath = `/${normalizedPath}`;
   }
 
-  // Handle potential duplicated slashes
+  // Only collapse multiple slashes for RELATIVE paths
   normalizedPath = normalizedPath.replace(/\/+/g, '/');
 
   return `${API_ORIGIN}${normalizedPath}`;

@@ -5,10 +5,11 @@ import { authOptions } from '../../auth/[...nextauth]/route';
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id: idParam } = await params;
     try {
-        const id = parseInt(params.id);
+        const id = parseInt(idParam);
         if (isNaN(id)) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
 
         const post = await prisma.blogPost.findUnique({
@@ -30,13 +31,14 @@ export async function GET(
 
 export async function PUT(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id: idParam } = await params;
     try {
         const session = await getServerSession(authOptions);
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const id = parseInt(params.id);
+        const id = parseInt(idParam);
         if (isNaN(id)) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
 
         const body = await request.json();
@@ -47,7 +49,9 @@ export async function PUT(
         if (body.content !== undefined) data.content = body.content;
         if (body.image !== undefined) data.image = body.image;
         if (body.status !== undefined) data.status = body.status;
-        if (body.author_id !== undefined || body.author !== undefined) data.authorId = body.author_id || body.author || null;
+        if (body.author_id !== undefined || body.author !== undefined) {
+            data.authorId = body.author_id ? parseInt(body.author_id) : (body.author ? parseInt(body.author) : null);
+        }
 
         const post = await prisma.blogPost.update({
             where: { id },
@@ -63,13 +67,14 @@ export async function PUT(
 
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id: idParam } = await params;
     try {
         const session = await getServerSession(authOptions);
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const id = parseInt(params.id);
+        const id = parseInt(idParam);
         if (isNaN(id)) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
 
         await prisma.blogPost.delete({

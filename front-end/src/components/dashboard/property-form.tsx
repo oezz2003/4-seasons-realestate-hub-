@@ -5,9 +5,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import type { RootState } from '@/store/store';
 import { fetchDevelopers } from '@/store/slices/developersSlice';
 import { fetchCompounds } from '@/store/slices/compoundsSlice';
-import { getAmenities } from '@/lib/api';
+import { getAmenities, getLocations } from '@/lib/api';
 import { Property, Developer, Compound, Location, Amenity } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,13 +43,16 @@ const propertySchema = z.object({
   amenities: z.array(z.number()).optional(),
   is_featured: z.boolean().optional(),
   is_new_launch: z.boolean().optional(),
+  main_image: z.string().optional(),
+  floor_plan_image: z.string().optional(),
+  map_image: z.string().optional(),
 });
 
 type PropertyFormData = z.infer<typeof propertySchema>;
 
 interface PropertyFormProps {
   property?: Property;
-  onSubmit: (data: PropertyFormData & { main_image?: string; gallery_images?: Array<{ id: string; image: string; alt_text?: string }> }) => void;
+  onSubmit: (data: PropertyFormData & { gallery_images?: Array<{ id: string; image: string; alt_text?: string }> }) => void;
   isLoading?: boolean;
 }
 
@@ -62,10 +66,13 @@ const PROPERTY_TYPES = [
 
 export function PropertyForm({ property, onSubmit, isLoading = false }: PropertyFormProps) {
   const dispatch = useAppDispatch();
-  const { developers } = useAppSelector((state) => state.developers);
-  const { compounds } = useAppSelector((state) => state.compounds);
+  const { developers, isLoading: isDevLoading, error: devError } = useAppSelector((state: RootState) => state.developers);
+  const { compounds, isLoading: isCompLoading, error: compError } = useAppSelector((state: RootState) => state.compounds);
   
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [mainImage, setMainImage] = useState<string | null>(property?.main_image || null);
+  const [mainImagePreview, setMainImagePreview] = useState<string | null>(property?.main_image || null);
+  const [mainImageFile, setMainImageFile] = useState<File | null>(null);
   const [galleryImages, setGalleryImages] = useState<Array<{ id: string; image: string; alt_text?: string }>>(
     property?.gallery_images?.map(img => ({
       id: img.id.toString(),
@@ -77,6 +84,16 @@ export function PropertyForm({ property, onSubmit, isLoading = false }: Property
     property?.amenities?.map((a) => (typeof a === 'number' ? a : a.id)) || []
   );
   const [amenities, setAmenities] = useState<{value: number; label: string}[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
+  
+  // Advanced images states
+  const [floorPlanImage, setFloorPlanImage] = useState<string | null>(property?.floor_plan_image || null);
+  const [floorPlanPreview, setFloorPlanPreview] = useState<string | null>(property?.floor_plan_image || null);
+  const [floorPlanFile, setFloorPlanFile] = useState<File | null>(null);
+  
+  const [mapImage, setMapImage] = useState<string | null>(property?.map_image || null);
+  const [mapPreview, setMapPreview] = useState<string | null>(property?.map_image || null);
+  const [mapFile, setMapFile] = useState<File | null>(null);
 
   const {
     register,
@@ -100,58 +117,136 @@ export function PropertyForm({ property, onSubmit, isLoading = false }: Property
       amenities: property?.amenities?.map((a) => (typeof a === 'number' ? a : a.id)) || [],
       is_featured: property?.is_featured || false,
       is_new_launch: property?.is_new_launch || false,
+      main_image: property?.main_image || '',
+      floor_plan_image: property?.floor_plan_image || '',
+      map_image: property?.map_image || '',
     },
   });
 
+  // 1. Fetch EVERYTHING for dropdowns (High page_size)
   useEffect(() => {
-    if (!developers.length) {
-      dispatch(fetchDevelopers({ page: 1, filters: {} }));
-    }
-    if (!compounds.length) {
-      dispatch(fetchCompounds({ page: 1, filters: {} }));
-    }
+    dispatch(fetchDevelopers({ page: 1, filters: { page_size: 1000 } as any }));
+    dispatch(fetchCompounds({ page: 1, filters: { page_size: 1000 } as any }));
     
-    // Fetch amenities using admin API
-    const loadAmenities = async () => {
+    const loadAmenitiesAndLocations = async () => {
       try {
-        const data = await getAmenities(true); // Use admin API
-        console.log('Fetched amenities:', data);
-        setAmenities(data.results.map(amenity => ({
-          value: amenity.id,
-          label: amenity.name
-        })));
+        const [amenitiesRes, locationsRes] = await Promise.all([
+          getAmenities(true, { page_size: 1000 } as any),
+          getLocations({ page_size: 1000 } as any)
+        ]);
+        if (amenitiesRes.results) {
+          setAmenities(amenitiesRes.results.map(a => ({
+            value: a.id,
+            label: a.name
+          })));
+        }
+        if (locationsRes.results) setLocations(locationsRes.results);
       } catch (error) {
-        console.error('Error loading amenities:', error);
-        // Fallback to empty array if there's an error
-        setAmenities([]);
+        console.error('Failed to load form dependencies:', error);
       }
     };
-    
-    loadAmenities();
-  }, [dispatch, developers.length, compounds.length]);
+    loadAmenitiesAndLocations();
+  }, [dispatch]);
 
   // Update form value when selectedAmenities changes
   useEffect(() => {
     setValue('amenities', selectedAmenities);
   }, [selectedAmenities, setValue]);
 
-  const handleFormSubmit = (data: PropertyFormData) => {
-    const filteredData = Object.fromEntries(
-      Object.entries({
-        ...data,
-        amenities: selectedAmenities,
-      }).filter(([_, value]) => value !== undefined && value !== '')
-    ) as PropertyFormData;
-    
-    onSubmit({
-      ...filteredData,
-      main_image: mainImage || undefined,
-      gallery_images: galleryImages,
-    });
+  // Link Compound, Developer, and Location
+  const watchedCompound = watch('compound');
+  const watchedDeveloper = watch('developer');
+  const watchedLocation = watch('location');
+
+  // Helper to safely get ID from Developer/Location/Compound association
+  const getAssocId = (assoc: any): number | undefined => {
+    if (assoc === null || assoc === undefined) return undefined;
+    if (typeof assoc === 'number') return assoc;
+    if (typeof assoc === 'object' && 'id' in assoc) return Number(assoc.id);
+    return undefined;
   };
 
-  const handleMainImageUpload = (imageUrl: string) => {
-    setMainImage(imageUrl);
+  // Helper to check if a value is effectively empty
+  const isNone = (val: any) => val === undefined || val === null || val === 'none' || val === 0;
+
+  // AUTO-POPULATION LOGIC (Helpful but not restrictive)
+  useEffect(() => {
+    if (!isNone(watchedCompound)) {
+      const selectedCompound = compounds.find((c: Compound) => c.id === Number(watchedCompound));
+      if (selectedCompound) {
+        const cDevId = getAssocId(selectedCompound.developer);
+        const cLocId = getAssocId(selectedCompound.location);
+
+        // Automatically set developer and location if they are not already set correctly
+        if (cDevId && Number(watchedDeveloper) !== cDevId) {
+          setValue('developer', cDevId);
+        }
+        if (cLocId && Number(watchedLocation) !== cLocId) {
+          setValue('location', cLocId);
+        }
+      }
+    }
+  }, [watchedCompound, compounds, setValue, watchedDeveloper, watchedLocation]);
+
+  const handleFormSubmit = async (data: PropertyFormData) => {
+    setIsSubmitting(true);
+    try {
+      let finalMainImage = mainImage;
+
+      if (mainImageFile) {
+        const { uploadImage } = await import('@/lib/upload-utils');
+        const result = await uploadImage(mainImageFile, 'property-main');
+        finalMainImage = typeof result === 'string' ? result : result.image;
+        setMainImage(finalMainImage);
+        setMainImageFile(null);
+      }
+
+      let finalFloorPlan = floorPlanImage;
+      if (floorPlanFile) {
+        const { uploadImage } = await import('@/lib/upload-utils');
+        const result = await uploadImage(floorPlanFile, 'property-floorplan');
+        finalFloorPlan = typeof result === 'string' ? result : result.image;
+        setFloorPlanImage(finalFloorPlan);
+        setFloorPlanFile(null);
+      }
+
+      let finalMapImage = mapImage;
+      if (mapFile) {
+        const { uploadImage } = await import('@/lib/upload-utils');
+        const result = await uploadImage(mapFile, 'property-map');
+        finalMapImage = typeof result === 'string' ? result : result.image;
+        setMapImage(finalMapImage);
+        setMapFile(null);
+      }
+
+      const submissionData = {
+        ...data,
+        amenities: selectedAmenities,
+        main_image: finalMainImage || undefined,
+        floor_plan_image: finalFloorPlan || undefined,
+        map_image: finalMapImage || undefined,
+        gallery_images: galleryImages,
+      };
+
+      // Filter out empty values for the API
+      const filteredData = Object.fromEntries(
+        Object.entries(submissionData).filter(([_, value]) => value !== undefined && value !== '')
+      );
+      
+      onSubmit(filteredData as any);
+    } catch (error) {
+      console.error('Error in handleFormSubmit:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleMainImageUpload = (file: File | null, previewUrl: string | null) => {
+    setMainImageFile(file);
+    setMainImagePreview(previewUrl);
+    if (!file) {
+      setMainImage(null);
+    }
   };
 
   const handleGalleryImageUpload = (imageUrl: string) => {
@@ -296,7 +391,7 @@ export function PropertyForm({ property, onSubmit, isLoading = false }: Property
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No compound</SelectItem>
-                  {compounds.map((compound) => (
+                  {compounds.map((compound: Compound) => (
                     <SelectItem key={compound.id} value={compound.id.toString()}>
                       {compound.name}
                     </SelectItem>
@@ -316,9 +411,29 @@ export function PropertyForm({ property, onSubmit, isLoading = false }: Property
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No developer</SelectItem>
-                  {developers.map((developer) => (
+                  {developers.map((developer: Developer) => (
                     <SelectItem key={developer.id} value={developer.id.toString()}>
                       {developer.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="location">Location</Label>
+              <Select
+                value={watch('location') !== undefined ? watch('location')?.toString() : 'none'}
+                onValueChange={(value) => setValue('location', value === 'none' ? undefined : Number(value))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select location (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No location</SelectItem>
+                  {locations.map((loc: Location) => (
+                    <SelectItem key={loc.id} value={loc.id.toString()}>
+                      {loc.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -370,10 +485,41 @@ export function PropertyForm({ property, onSubmit, isLoading = false }: Property
           <div className="space-y-2">
             <Label>Main Image *</Label>
             <ImageUpload
-              onUpload={handleMainImageUpload}
-              currentImage={mainImage}
+              autoUpload={false}
+              onFileSelect={handleMainImageUpload}
+              currentImage={mainImagePreview}
               type="property-main"
             />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Floor Plan</Label>
+              <ImageUpload
+                autoUpload={false}
+                onFileSelect={(file, preview) => {
+                  setFloorPlanFile(file);
+                  setFloorPlanPreview(preview);
+                  if (!file) setFloorPlanImage(null);
+                }}
+                currentImage={floorPlanPreview}
+                type="property-floorplan"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Location Map Overlay (Optional)</Label>
+              <ImageUpload
+                autoUpload={false}
+                onFileSelect={(file, preview) => {
+                  setMapFile(file);
+                  setMapPreview(preview);
+                  if (!file) setMapImage(null);
+                }}
+                currentImage={mapPreview}
+                type="property-map"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -422,8 +568,8 @@ export function PropertyForm({ property, onSubmit, isLoading = false }: Property
         <Button type="button" variant="outline">
           Cancel
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? (
+        <Button type="submit" disabled={isLoading || isSubmitting}>
+          {isLoading || isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Saving...

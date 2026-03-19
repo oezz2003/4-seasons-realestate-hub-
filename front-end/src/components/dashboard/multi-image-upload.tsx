@@ -6,6 +6,7 @@ import { Upload, X, Loader2, Plus } from 'lucide-react';
 import { uploadMultipleImages, formatFileSize } from '@/lib/upload-utils';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import { getImageUrl } from '@/lib/image-helpers';
 
 interface MultiImageUploadProps {
   images: Array<{ id: string; image: string; alt_text?: string }>;
@@ -136,7 +137,7 @@ export function MultiImageUpload({
           <div key={image.id} className="relative group border rounded-lg overflow-hidden">
             <div className="aspect-square relative">
               <Image
-                src={image.image}
+                src={getImageUrl(image.image)}
                 alt={image.alt_text || `Image ${index + 1}`}
                 fill
                 className="object-cover"
@@ -183,7 +184,7 @@ export function MultiImageUpload({
               <div className="flex flex-col items-center space-y-2">
                 <Upload className="h-8 w-8 text-gray-400" />
                 <p className="text-sm text-gray-500">Add Image</p>
-                <p className="text-xs text-gray-400">PNG, JPG, WebP</p>
+                <p className="text-xs text-gray-400">Images (JPEG, PNG, WebP)</p>
               </div>
             )}
           </div>
@@ -221,7 +222,7 @@ export function MultiImageUpload({
       {/* Instructions */}
       <div className="text-xs text-muted-foreground">
         <p>• Upload up to {maxImages} images</p>
-        <p>• Supported formats: JPEG, PNG, WebP</p>
+        <p>• Supported formats: JPEG, PNG, WebP, etc.</p>
         <p>• Maximum file size: 5MB per image</p>
         <p>• Images will be automatically resized and optimized</p>
       </div>

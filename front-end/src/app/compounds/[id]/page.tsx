@@ -10,8 +10,9 @@ import { notFound } from 'next/navigation';
 import { getCompoundById, getProperties, getCompounds } from '@/lib/api';
 import { getImageUrl, getPlaceholderImage, getLocationName, getDeveloperName } from '@/lib/image-helpers';
 
-export default async function CompoundDetailsPage({ params }: { params: { id: string } }) {
-  const compound = await getCompoundById(params.id);
+export default async function CompoundDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const compound = await getCompoundById(id);
 
   if (!compound) {
     notFound();
@@ -19,7 +20,7 @@ export default async function CompoundDetailsPage({ params }: { params: { id: st
 
   // Fetch properties in this compound
   const compoundPropertiesData = await getProperties({
-    compound: params.id,
+    compound: id,
     page_size: 6,
   });
 

@@ -15,6 +15,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Menu, Bell, Search, User, LogOut, Settings, Sun, Moon } from 'lucide-react';
+import { getImageUrl } from '@/lib/image-helpers';
 
 interface TopBarProps {
   onMenuClick: () => void;
@@ -95,7 +96,7 @@ export function TopBar({ onMenuClick }: TopBarProps) {
             <Button variant="ghost" className="relative h-8 w-8 rounded-full border border-border hover:bg-accent/50">
               <Avatar className="h-8 w-8">
                 <AvatarImage
-                  src={user?.image || ''}
+                  src={getImageUrl(user?.image)}
                   alt={user?.name || 'User'}
                 />
                 <AvatarFallback className="bg-primary/10 text-foreground">

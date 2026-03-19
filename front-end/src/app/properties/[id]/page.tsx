@@ -13,8 +13,9 @@ import { notFound } from 'next/navigation';
 import { getPropertyById, getProperties } from '@/lib/api';
 import { getImageUrl, getPlaceholderImage, getLocationName, getDeveloperName, getCompoundName } from '@/lib/image-helpers';
 
-export default async function PropertyDetailsPage({ params }: { params: { id: string } }) {
-  const property = await getPropertyById(params.id);
+export default async function PropertyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  const property = await getPropertyById(resolvedParams.id);
 
   if (!property) {
     notFound();
@@ -22,7 +23,7 @@ export default async function PropertyDetailsPage({ params }: { params: { id: st
 
   // Fetch suggested properties (same location or developer)
   const suggestedPropertiesData = await getProperties({
-    location: property.location?.name,
+    location: property.location?.slug,
     page_size: 3,
   });
 

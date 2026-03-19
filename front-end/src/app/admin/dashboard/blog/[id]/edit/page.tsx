@@ -1,9 +1,10 @@
 import { BlogPostEditClient } from '../../blog-post-edit-client';
 
 interface EditBlogPostPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function EditBlogPostPage({ params }: EditBlogPostPageProps) {
-  return <BlogPostEditClient id={params.id} />;
+  const { id } = await params;
+  return <BlogPostEditClient id={id} />;
 }

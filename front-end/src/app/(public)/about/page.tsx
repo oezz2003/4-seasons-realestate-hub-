@@ -1,46 +1,23 @@
 import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Target, Eye, Award, Users, Smile, Building } from 'lucide-react';
 import Link from 'next/link';
+import { Target, Eye } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { getFeaturedProperties } from '@/lib/api';
+import { getImageUrl, getPlaceholderImage } from '@/lib/image-helpers';
 
-const teamMembers = [
-  {
-    name: "John Doe",
-    role: "Founder & CEO",
-    image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=200&h=200&fit=crop",
-    imageHint: "male executive"
-  },
-  {
-    name: "Jane Smith",
-    role: "Lead Real Estate Agent",
-    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&h=200&fit=crop",
-    imageHint: "female professional"
-  },
-  {
-    name: "Michael Chen",
-    role: "Marketing Director",
-    image: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=200&h=200&fit=crop",
-    imageHint: "male professional"
-  },
-   {
-    name: "Emily White",
-    role: "Client Relations Manager",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&h=200&fit=crop",
-    imageHint: "friendly woman"
-  },
-];
+export default async function AboutPage() {
+  const featuredProperties = await getFeaturedProperties();
+  const heroImage = featuredProperties.results.length > 0 
+    ? getImageUrl(featuredProperties.results[0].main_image)
+    : getPlaceholderImage('property');
 
-export default function AboutPage() {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
       <section className="relative h-[50vh] min-h-[300px] w-full">
         <Image
-          src="https://images.unsplash.com/photo-1487958449943-2429e8be8625?q=80&w=1920&h=1080&fit=crop"
-          alt="Office interior"
-          data-ai-hint="modern office interior"
+          src={heroImage}
+          alt="About 4 Seasons"
           fill
           className="object-cover"
           priority
@@ -84,34 +61,6 @@ export default function AboutPage() {
                 To be the most trusted and sought-after real estate brokerage in the region, known for our integrity, innovation, and unwavering commitment to client satisfaction. We envision a future where everyone can find their perfect place to call home.
               </p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Team Section */}
-      <section className="py-12 md:py-20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <div className="overflow-hidden py-1">
-              <h2 className="text-3xl font-bold font-headline animate-title-reveal">Meet Our Expert Team</h2>
-            </div>
-            <div className="overflow-hidden py-1">
-              <p className="mt-2 text-lg text-muted-foreground max-w-2xl mx-auto animate-title-reveal" style={{ animationDelay: '0.1s' }}>
-                The driving force behind our success. A group of dedicated professionals ready to assist you.
-              </p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-            {teamMembers.map((member, index) => (
-              <div key={member.name} className="text-center animate-fade-in-up" style={{ animationDelay: `${index * 0.1}s` }}>
-                <Avatar className="w-32 h-32 mx-auto mb-4 border-4 border-primary/20 shadow-lg">
-                  <AvatarImage src={member.image} alt={member.name} data-ai-hint={member.imageHint} />
-                  <AvatarFallback>{member.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                </Avatar>
-                <h3 className="text-xl font-bold font-headline">{member.name}</h3>
-                <p className="text-primary">{member.role}</p>
-              </div>
-            ))}
           </div>
         </div>
       </section>

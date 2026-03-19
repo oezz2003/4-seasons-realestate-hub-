@@ -1,9 +1,8 @@
-import axios from 'axios';
 import { BlogPost, Author, Amenity, Location, Developer, Compound, Property, PropertyImage, Partner, Testimonial, ContactFormSubmission } from './types';
 
 const getBaseUrl = () => {
   if (typeof window !== 'undefined') return ''; // Browser uses relative path
-  if (process.env.NEXTAUTH_URL) return process.env.NEXTAUTH_URL;
+  if (process.env.NEXTAUTH_URL) return process.env.NEXTAUTH_URL.replace(/\/$/, '');
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
   return 'http://127.0.0.1:3000'; // Fallback for local SSR
 };
@@ -16,40 +15,6 @@ const getAuthToken = (): string | null => {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem('authToken');
 };
-
-// Set up axios interceptor to include auth token in admin requests
-axios.interceptors.request.use(
-  (config) => {
-    // Only add auth token to admin API requests
-    if (config.url?.includes(ADMIN_API_BASE_URL) || config.url?.includes('/admin/')) {
-      const token = getAuthToken();
-      if (token) {
-        config.headers.Authorization = `Token ${token}`;
-      }
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Set up axios interceptor to handle 401 responses
-axios.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Remove token and redirect to login
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('authToken');
-        if (!window.location.pathname.includes('/admin/login')) {
-          window.location.href = '/admin/login';
-        }
-      }
-    }
-    return Promise.reject(error);
-  }
-);
 
 interface ApiResponse<T> {
   results: T[];
@@ -106,29 +71,85 @@ interface TestimonialFilters {
   page_size?: number;
 }
 
-export async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<{
-  results: T[];
-  count: number;
-  next: string | null;
-  previous: string | null;
-}> {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-  if (!response.ok) throw new Error('API request failed');
+export async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<ApiResponse<T>> {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const response = await fetch(url, options);
+  if (!response.ok) throw new Error(`API request failed: ${response.statusText}`);
   return response.json();
 }
 
 export async function fetchApiWithParams<T>(endpoint: string, params?: Record<string, any>, baseURL?: string): Promise<ApiResponse<T>> {
   try {
-    const url = baseURL || API_BASE_URL;
-    const response = await axios.get(`${url}${endpoint}`, { params });
-    return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(`API call failed: ${error.message} - ${error.response?.statusText}`);
-    } else {
-      throw new Error(`An unexpected error occurred: ${error}`);
+    const base = (baseURL || API_BASE_URL).replace(/\/$/, '');
+    const absoluteBase = base.startsWith('http') ? base : (typeof window !== 'undefined' ? window.location.origin + (base.startsWith('/') ? '' : '/') + base : base);
+    const url = new URL(endpoint.replace(/^\//, ''), absoluteBase.endsWith('/') ? absoluteBase : absoluteBase + '/');
+    
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key] !== undefined && params[key] !== null) {
+          url.searchParams.append(key, String(params[key]));
+        }
+      });
     }
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Add auth token if available (for admin calls)
+    const token = getAuthToken();
+    if (token && (url.toString().includes('/admin/') || url.toString().includes(ADMIN_API_BASE_URL))) {
+      headers['Authorization'] = `Token ${token}`;
+    }
+
+    const response = await fetch(url.toString(), {
+      headers,
+      // Next.js 15 cache settings (default is no-store in dev, but helps in prod)
+      next: { revalidate: 60 } 
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Fetch error:', error);
+    throw error;
   }
+}
+
+async function genericFetch<T>(url: string, method: string = 'GET', data?: any): Promise<T> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  const token = getAuthToken();
+  if (token && (url.includes('/admin/') || url.includes(ADMIN_API_BASE_URL))) {
+    headers['Authorization'] = `Token ${token}`;
+  }
+
+  const options: RequestInit = {
+    method,
+    headers,
+    body: data ? JSON.stringify(data) : undefined,
+    cache: 'no-store', // Ensure fresh data for mutations and specific gets
+  };
+
+  const response = await fetch(url, options);
+  
+  if (!response.ok) {
+    if (response.status === 401 && typeof window !== 'undefined') {
+      localStorage.removeItem('authToken');
+      if (!window.location.pathname.includes('/admin/login')) {
+        window.location.href = '/admin/login';
+      }
+    }
+    throw new Error(`API call failed: ${response.status} ${response.statusText}`);
+  }
+  
+  if (method === 'DELETE') return {} as T;
+  return response.json();
 }
 
 // ===== PROPERTIES API =====
@@ -185,8 +206,7 @@ export async function getAdminProperties(filters?: PropertyFilters): Promise<Api
 
 export async function getPropertyById(id: string): Promise<Property | null> {
   try {
-    const response = await axios.get(`${API_BASE_URL}properties/${id}/`);
-    return response.data;
+    return await genericFetch<Property>(`${API_BASE_URL}properties/${id}/`);
   } catch (error) {
     console.error('Error fetching property by ID:', error);
     return null;
@@ -205,8 +225,7 @@ export async function getPropertyBySlug(slug: string): Promise<Property | null> 
 
 export async function createProperty(data: Partial<Property>): Promise<Property> {
   try {
-    const response = await axios.post(`${ADMIN_API_BASE_URL}properties/`, data);
-    return response.data;
+    return await genericFetch<Property>(`${ADMIN_API_BASE_URL}properties/`, 'POST', data);
   } catch (error) {
     console.error('Error creating property:', error);
     throw error;
@@ -215,8 +234,7 @@ export async function createProperty(data: Partial<Property>): Promise<Property>
 
 export async function updateProperty(id: number, data: Partial<Property>): Promise<Property> {
   try {
-    const response = await axios.put(`${ADMIN_API_BASE_URL}properties/${id}/`, data);
-    return response.data;
+    return await genericFetch<Property>(`${ADMIN_API_BASE_URL}properties/${id}/`, 'PUT', data);
   } catch (error) {
     console.error('Error updating property:', error);
     throw error;
@@ -225,7 +243,7 @@ export async function updateProperty(id: number, data: Partial<Property>): Promi
 
 export async function deleteProperty(id: number): Promise<void> {
   try {
-    await axios.delete(`${ADMIN_API_BASE_URL}properties/${id}/`);
+    await genericFetch(`${ADMIN_API_BASE_URL}properties/${id}/`, 'DELETE');
   } catch (error) {
     console.error('Error deleting property:', error);
     throw error;
@@ -288,8 +306,7 @@ export async function getAdminCompounds(filters?: CompoundFilters): Promise<ApiR
 
 export async function getCompoundById(id: string): Promise<Compound | null> {
   try {
-    const response = await axios.get(`${API_BASE_URL}compounds/${id}/`);
-    return response.data;
+    return await genericFetch<Compound>(`${API_BASE_URL}compounds/${id}/`);
   } catch (error) {
     console.error('Error fetching compound by ID:', error);
     return null;
@@ -298,8 +315,7 @@ export async function getCompoundById(id: string): Promise<Compound | null> {
 
 export async function getAdminCompoundById(id: string): Promise<Compound | null> {
   try {
-    const response = await axios.get(`${ADMIN_API_BASE_URL}compounds/${id}/`);
-    return response.data;
+    return await genericFetch<Compound>(`${ADMIN_API_BASE_URL}compounds/${id}/`);
   } catch (error) {
     console.error('Error fetching admin compound by ID:', error);
     return null;
@@ -318,8 +334,7 @@ export async function getCompoundBySlug(slug: string): Promise<Compound | null> 
 
 export async function createCompound(data: Partial<Compound>): Promise<Compound> {
   try {
-    const response = await axios.post(`${ADMIN_API_BASE_URL}compounds/`, data);
-    return response.data;
+    return await genericFetch<Compound>(`${ADMIN_API_BASE_URL}compounds/`, 'POST', data);
   } catch (error) {
     console.error('Error creating compound:', error);
     throw error;
@@ -328,8 +343,7 @@ export async function createCompound(data: Partial<Compound>): Promise<Compound>
 
 export async function updateCompound(id: number, data: Partial<Compound>): Promise<Compound> {
   try {
-    const response = await axios.put(`${ADMIN_API_BASE_URL}compounds/${id}/`, data);
-    return response.data;
+    return await genericFetch<Compound>(`${ADMIN_API_BASE_URL}compounds/${id}/`, 'PUT', data);
   } catch (error) {
     console.error('Error updating compound:', error);
     throw error;
@@ -338,7 +352,7 @@ export async function updateCompound(id: number, data: Partial<Compound>): Promi
 
 export async function deleteCompound(id: number): Promise<void> {
   try {
-    await axios.delete(`${ADMIN_API_BASE_URL}compounds/${id}/`);
+    await genericFetch(`${ADMIN_API_BASE_URL}compounds/${id}/`, 'DELETE');
   } catch (error) {
     console.error('Error deleting compound:', error);
     throw error;
@@ -379,8 +393,7 @@ export async function getAdminDevelopers(filters?: DeveloperFilters): Promise<Ap
 
 export async function getDeveloperById(id: string): Promise<Developer | null> {
   try {
-    const response = await axios.get(`${API_BASE_URL}developers/${id}/`);
-    return response.data;
+    return await genericFetch<Developer>(`${API_BASE_URL}developers/${id}/`);
   } catch (error) {
     console.error('Error fetching developer by ID:', error);
     return null;
@@ -389,8 +402,7 @@ export async function getDeveloperById(id: string): Promise<Developer | null> {
 
 export async function getAdminDeveloperById(id: string): Promise<Developer | null> {
   try {
-    const response = await axios.get(`${ADMIN_API_BASE_URL}developers/${id}/`);
-    return response.data;
+    return await genericFetch<Developer>(`${ADMIN_API_BASE_URL}developers/${id}/`);
   } catch (error) {
     console.error('Error fetching admin developer by ID:', error);
     return null;
@@ -409,8 +421,7 @@ export async function getDeveloperBySlug(slug: string): Promise<Developer | null
 
 export async function createDeveloper(data: Partial<Developer>): Promise<Developer> {
   try {
-    const response = await axios.post(`${ADMIN_API_BASE_URL}developers/`, data);
-    return response.data;
+    return await genericFetch<Developer>(`${ADMIN_API_BASE_URL}developers/`, 'POST', data);
   } catch (error) {
     console.error('Error creating developer:', error);
     throw error;
@@ -419,8 +430,7 @@ export async function createDeveloper(data: Partial<Developer>): Promise<Develop
 
 export async function updateDeveloper(id: number, data: Partial<Developer>): Promise<Developer> {
   try {
-    const response = await axios.put(`${ADMIN_API_BASE_URL}developers/${id}/`, data);
-    return response.data;
+    return await genericFetch<Developer>(`${ADMIN_API_BASE_URL}developers/${id}/`, 'PUT', data);
   } catch (error) {
     console.error('Error updating developer:', error);
     throw error;
@@ -429,7 +439,7 @@ export async function updateDeveloper(id: number, data: Partial<Developer>): Pro
 
 export async function deleteDeveloper(id: number): Promise<void> {
   try {
-    await axios.delete(`${ADMIN_API_BASE_URL}developers/${id}/`);
+    await genericFetch(`${ADMIN_API_BASE_URL}developers/${id}/`, 'DELETE');
   } catch (error) {
     console.error('Error deleting developer:', error);
     throw error;
@@ -437,9 +447,9 @@ export async function deleteDeveloper(id: number): Promise<void> {
 }
 
 // ===== LOCATIONS API =====
-export async function getLocations(): Promise<ApiResponse<Location>> {
+export async function getLocations(params?: Record<string, any>): Promise<ApiResponse<Location>> {
   try {
-    return await fetchApiWithParams<Location>('locations/', {});
+    return await fetchApiWithParams<Location>('locations/', params || {});
   } catch (error) {
     console.error('Error fetching locations:', error);
     return { results: [], count: 0, next: null, previous: null };
@@ -448,8 +458,7 @@ export async function getLocations(): Promise<ApiResponse<Location>> {
 
 export async function getLocationById(id: string): Promise<Location | null> {
   try {
-    const response = await axios.get(`${API_BASE_URL}locations/${id}/`);
-    return response.data;
+    return await genericFetch<Location>(`${API_BASE_URL}locations/${id}/`);
   } catch (error) {
     console.error('Error fetching location by ID:', error);
     return null;
@@ -468,8 +477,7 @@ export async function getLocationBySlug(slug: string): Promise<Location | null> 
 
 export async function createLocation(data: Partial<Location>): Promise<Location> {
   try {
-    const response = await axios.post(`${ADMIN_API_BASE_URL}locations/`, data);
-    return response.data;
+    return await genericFetch<Location>(`${ADMIN_API_BASE_URL}locations/`, 'POST', data);
   } catch (error) {
     console.error('Error creating location:', error);
     throw error;
@@ -478,8 +486,7 @@ export async function createLocation(data: Partial<Location>): Promise<Location>
 
 export async function updateLocation(id: number, data: Partial<Location>): Promise<Location> {
   try {
-    const response = await axios.put(`${ADMIN_API_BASE_URL}locations/${id}/`, data);
-    return response.data;
+    return await genericFetch<Location>(`${ADMIN_API_BASE_URL}locations/${id}/`, 'PUT', data);
   } catch (error) {
     console.error('Error updating location:', error);
     throw error;
@@ -488,7 +495,7 @@ export async function updateLocation(id: number, data: Partial<Location>): Promi
 
 export async function deleteLocation(id: number): Promise<void> {
   try {
-    await axios.delete(`${ADMIN_API_BASE_URL}locations/${id}/`);
+    await genericFetch(`${ADMIN_API_BASE_URL}locations/${id}/`, 'DELETE');
   } catch (error) {
     console.error('Error deleting location:', error);
     throw error;
@@ -496,10 +503,10 @@ export async function deleteLocation(id: number): Promise<void> {
 }
 
 // ===== AMENITIES API =====
-export async function getAmenities(useAdminApi: boolean = false): Promise<ApiResponse<Amenity>> {
+export async function getAmenities(useAdminApi: boolean = false, params?: Record<string, any>): Promise<ApiResponse<Amenity>> {
   try {
     const baseURL = useAdminApi ? ADMIN_API_BASE_URL : API_BASE_URL;
-    return await fetchApiWithParams<Amenity>('amenities/', {}, baseURL);
+    return await fetchApiWithParams<Amenity>('amenities/', params || {}, baseURL);
   } catch (error) {
     console.error('Error fetching amenities:', error);
     return { results: [], count: 0, next: null, previous: null };
@@ -508,8 +515,7 @@ export async function getAmenities(useAdminApi: boolean = false): Promise<ApiRes
 
 export async function createAmenity(data: Partial<Amenity>): Promise<Amenity> {
   try {
-    const response = await axios.post(`${ADMIN_API_BASE_URL}amenities/`, data);
-    return response.data;
+    return await genericFetch<Amenity>(`${ADMIN_API_BASE_URL}amenities/`, 'POST', data);
   } catch (error) {
     console.error('Error creating amenity:', error);
     throw error;
@@ -518,8 +524,7 @@ export async function createAmenity(data: Partial<Amenity>): Promise<Amenity> {
 
 export async function updateAmenity(id: number, data: Partial<Amenity>): Promise<Amenity> {
   try {
-    const response = await axios.put(`${ADMIN_API_BASE_URL}amenities/${id}/`, data);
-    return response.data;
+    return await genericFetch<Amenity>(`${ADMIN_API_BASE_URL}amenities/${id}/`, 'PUT', data);
   } catch (error) {
     console.error('Error updating amenity:', error);
     throw error;
@@ -528,7 +533,7 @@ export async function updateAmenity(id: number, data: Partial<Amenity>): Promise
 
 export async function deleteAmenity(id: number): Promise<void> {
   try {
-    await axios.delete(`${ADMIN_API_BASE_URL}amenities/${id}/`);
+    await genericFetch(`${ADMIN_API_BASE_URL}amenities/${id}/`, 'DELETE');
   } catch (error) {
     console.error('Error deleting amenity:', error);
     throw error;
@@ -573,8 +578,7 @@ export async function getAdminBlogPosts(filters?: BlogPostFilters): Promise<ApiR
 export async function getBlogPostById(id: string, useAdminApi: boolean = false): Promise<BlogPost | null> {
   try {
     const baseUrl = useAdminApi ? ADMIN_API_BASE_URL : API_BASE_URL;
-    const response = await axios.get(`${baseUrl}blog-posts/${id}/`);
-    return response.data;
+    return await genericFetch<BlogPost>(`${baseUrl}blog-posts/${id}/`);
   } catch (error) {
     console.error('Error fetching blog post by ID:', error);
     return null;
@@ -593,8 +597,7 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
 
 export async function createBlogPost(data: BlogPostInput): Promise<BlogPost> {
   try {
-    const response = await axios.post(`${ADMIN_API_BASE_URL}blog-posts/`, data);
-    return response.data;
+    return await genericFetch<BlogPost>(`${ADMIN_API_BASE_URL}blog-posts/`, 'POST', data);
   } catch (error) {
     console.error('Error creating blog post:', error);
     throw error;
@@ -603,8 +606,7 @@ export async function createBlogPost(data: BlogPostInput): Promise<BlogPost> {
 
 export async function updateBlogPost(id: number, data: BlogPostInput): Promise<BlogPost> {
   try {
-    const response = await axios.put(`${ADMIN_API_BASE_URL}blog-posts/${id}/`, data);
-    return response.data;
+    return await genericFetch<BlogPost>(`${ADMIN_API_BASE_URL}blog-posts/${id}/`, 'PUT', data);
   } catch (error) {
     console.error('Error updating blog post:', error);
     throw error;
@@ -613,7 +615,7 @@ export async function updateBlogPost(id: number, data: BlogPostInput): Promise<B
 
 export async function deleteBlogPost(id: number): Promise<void> {
   try {
-    await axios.delete(`${ADMIN_API_BASE_URL}blog-posts/${id}/`);
+    await genericFetch(`${ADMIN_API_BASE_URL}blog-posts/${id}/`, 'DELETE');
   } catch (error) {
     console.error('Error deleting blog post:', error);
     throw error;
@@ -653,8 +655,7 @@ export async function getBlogPostWithAdminAuthors(id: string): Promise<{ post: B
 
 export async function getAuthorById(id: string): Promise<Author | null> {
   try {
-    const response = await axios.get(`${API_BASE_URL}authors/${id}/`);
-    return response.data;
+    return await genericFetch<Author>(`${API_BASE_URL}authors/${id}/`);
   } catch (error) {
     console.error('Error fetching author by ID:', error);
     return null;
@@ -663,8 +664,7 @@ export async function getAuthorById(id: string): Promise<Author | null> {
 
 export async function createAuthor(data: Partial<Author>): Promise<Author> {
   try {
-    const response = await axios.post(`${ADMIN_API_BASE_URL}authors/`, data);
-    return response.data;
+    return await genericFetch<Author>(`${ADMIN_API_BASE_URL}authors/`, 'POST', data);
   } catch (error) {
     console.error('Error creating author:', error);
     throw error;
@@ -673,8 +673,7 @@ export async function createAuthor(data: Partial<Author>): Promise<Author> {
 
 export async function updateAuthor(id: number, data: Partial<Author>): Promise<Author> {
   try {
-    const response = await axios.put(`${ADMIN_API_BASE_URL}authors/${id}/`, data);
-    return response.data;
+    return await genericFetch<Author>(`${ADMIN_API_BASE_URL}authors/${id}/`, 'PUT', data);
   } catch (error) {
     console.error('Error updating author:', error);
     throw error;
@@ -683,7 +682,7 @@ export async function updateAuthor(id: number, data: Partial<Author>): Promise<A
 
 export async function deleteAuthor(id: number): Promise<void> {
   try {
-    await axios.delete(`${ADMIN_API_BASE_URL}authors/${id}/`);
+    await genericFetch(`${ADMIN_API_BASE_URL}authors/${id}/`, 'DELETE');
   } catch (error) {
     console.error('Error deleting author:', error);
     throw error;
@@ -732,8 +731,7 @@ export async function getContactSubmissions(filters?: { page?: number; page_size
 
 export async function getContactSubmissionById(id: string): Promise<ContactFormSubmission | null> {
   try {
-    const response = await axios.get(`${ADMIN_API_BASE_URL}contactformsubmissions/${id}/`);
-    return response.data;
+    return await genericFetch<ContactFormSubmission>(`${ADMIN_API_BASE_URL}contactformsubmissions/${id}/`);
   } catch (error) {
     console.error('Error fetching contact submission by ID:', error);
     return null;
@@ -743,14 +741,9 @@ export async function getContactSubmissionById(id: string): Promise<ContactFormS
 // ===== CONTACT FORM API =====
 export async function submitContactForm(submission: Omit<ContactFormSubmission, 'id' | 'submitted_at'>): Promise<ContactFormSubmission> {
   try {
-    const response = await axios.post(`${API_BASE_URL}contact-submissions/`, submission);
-    return response.data;
+    return await genericFetch<ContactFormSubmission>(`${API_BASE_URL}contact-submissions/`, 'POST', submission);
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(`Contact form submission failed: ${error.message} - ${error.response?.statusText}`);
-    } else {
-      throw new Error(`An unexpected error occurred: ${error}`);
-    }
+    throw new Error(`Contact form submission failed: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 

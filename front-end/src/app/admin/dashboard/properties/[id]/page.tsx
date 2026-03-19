@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Edit, ArrowLeft, Star, Rocket, MapPin, Building2, Users } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { getImageUrl } from '@/lib/image-helpers';
 
 export default function PropertyDetailsPage() {
   const dispatch = useAppDispatch();
@@ -94,7 +95,7 @@ export default function PropertyDetailsPage() {
               {currentProperty.main_image ? (
                 <div className="relative h-64 lg:h-96">
                   <Image
-                    src={currentProperty.main_image}
+                    src={getImageUrl(currentProperty.main_image)}
                     alt={currentProperty.title}
                     fill
                     className="object-cover rounded-t-lg"
@@ -135,7 +136,7 @@ export default function PropertyDetailsPage() {
                   {currentProperty.gallery_images.map((image, index) => (
                     <div key={index} className="relative h-24 rounded-lg overflow-hidden">
                       <Image
-                        src={image.image}
+                        src={getImageUrl(image.image)}
                         alt={image.alt_text || `Gallery ${index + 1}`}
                         fill
                         className="object-cover"

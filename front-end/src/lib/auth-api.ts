@@ -1,7 +1,3 @@
-import axios from 'axios';
-
-const API_BASE_URL = '/api/';
-
 export interface LoginCredentials {
   username: string;
   password: string;
@@ -28,13 +24,7 @@ export interface User {
   is_staff: boolean;
 }
 
-// Create axios instance for auth
-const authApi = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+const API_BASE_URL = '/api/';
 
 // Token storage utilities
 export const tokenStorage = {
@@ -52,22 +42,54 @@ export const tokenStorage = {
   },
 };
 
+// Helper for auth requests
+const authFetch = async <T>(endpoint: string, options: RequestInit = {}): Promise<T> => {
+  const token = tokenStorage.get();
+  const headers = new Headers(options.headers);
+  
+  if (!headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+  
+  if (token && !headers.has('Authorization')) {
+    headers.set('Authorization', `Token ${token}`);
+  }
+
+  const response = await fetch(`${API_BASE_URL}${endpoint.replace(/^\//, '')}`, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      tokenStorage.remove();
+      if (typeof window !== 'undefined' && !window.location.pathname.includes('/admin/login')) {
+        window.location.href = '/admin/login';
+      }
+    }
+    const errorData = await response.json().catch(() => ({}));
+    const message = errorData.detail || errorData.error || `Auth error: ${response.status}`;
+    throw new Error(message);
+  }
+
+  return response.json();
+};
+
 // Auth API functions
 export const authApiFunctions = {
   login: async (credentials: LoginCredentials): Promise<LoginResponse> => {
     try {
-      const response = await authApi.post<LoginResponse>('auth/login/', credentials);
+      const data = await authFetch<LoginResponse>('auth/login/', {
+        method: 'POST',
+        body: JSON.stringify(credentials),
+      });
 
       // Store token
-      tokenStorage.set(response.data.token);
+      tokenStorage.set(data.token);
 
-      return response.data;
+      return data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const message = error.response?.data?.detail || error.message || 'Login failed';
-        throw new Error(message);
-      }
-      throw new Error('An unexpected error occurred');
+      throw error instanceof Error ? error : new Error('Login failed');
     }
   },
 
@@ -77,22 +99,17 @@ export const authApiFunctions = {
 
   verifyToken: async (token: string): Promise<User> => {
     try {
-      const response = await authApi.get<User>('auth/me/', {
+      return await authFetch<User>('auth/me/', {
         headers: {
           'Authorization': `Token ${token}`,
         },
       });
-      return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 401) {
-          tokenStorage.remove();
-          throw new Error('Token expired or invalid');
-        }
-        const message = error.response?.data?.detail || error.message || 'Token verification failed';
-        throw new Error(message);
+      if (error instanceof Error && error.message.includes('401')) {
+        tokenStorage.remove();
+        throw new Error('Token expired or invalid');
       }
-      throw new Error('An unexpected error occurred');
+      throw error;
     }
   },
 
@@ -108,34 +125,4 @@ export const authApiFunctions = {
   },
 };
 
-// Set up axios interceptor to include token in requests
-authApi.interceptors.request.use(
-  (config) => {
-    const token = tokenStorage.get();
-    if (token) {
-      config.headers.Authorization = `Token ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Set up axios interceptor to handle 401 responses
-authApi.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      tokenStorage.remove();
-      // Redirect to login page if not already there
-      if (typeof window !== 'undefined' && !window.location.pathname.includes('/admin/login')) {
-        window.location.href = '/admin/login';
-      }
-    }
-    return Promise.reject(error);
-  }
-);
-
-export default authApi;
-
+export default authFetch;

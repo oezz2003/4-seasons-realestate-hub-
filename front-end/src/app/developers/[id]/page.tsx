@@ -10,8 +10,9 @@ import { getDeveloperById, getProperties, getCompounds } from "@/lib/api";
 import { getImageUrl, getPlaceholderImage } from "@/lib/image-helpers";
 import { notFound } from "next/navigation";
 
-export default async function DeveloperDetailsPage({ params }: { params: { id: string } }) {
-  const developer = await getDeveloperById(params.id);
+export default async function DeveloperDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const developer = await getDeveloperById(id);
 
   if (!developer) {
     notFound();
@@ -19,8 +20,8 @@ export default async function DeveloperDetailsPage({ params }: { params: { id: s
 
   // Fetch developer's properties and compounds
   const [developerPropertiesData, developerCompoundsData] = await Promise.all([
-    getProperties({ developer: params.id }),
-    getCompounds({ developer: params.id }),
+    getProperties({ developer: id }),
+    getCompounds({ developer: id }),
   ]);
 
   return (

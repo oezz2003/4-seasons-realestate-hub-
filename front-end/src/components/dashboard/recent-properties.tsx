@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Eye, Edit, Trash2 } from 'lucide-react';
 import Image from 'next/image';
+import { getImageUrl } from '@/lib/image-helpers';
 
 interface RecentPropertiesProps {
   properties: Property[];
@@ -32,7 +33,7 @@ export function RecentProperties({ properties }: RecentPropertiesProps) {
                   <div className="h-12 w-12 relative rounded-lg overflow-hidden bg-muted">
                     {property.main_image ? (
                       <Image
-                        src={property.main_image}
+                        src={getImageUrl(property.main_image)}
                         alt={property.title}
                         fill
                         className="object-cover"

@@ -9,7 +9,7 @@ import Image from 'next/image';
 import { getImageUrl } from '@/lib/image-helpers';
 
 interface DeveloperDetailsPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function DeveloperDetailsPage({ params }: DeveloperDetailsPageProps) {

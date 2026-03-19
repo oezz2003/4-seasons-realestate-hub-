@@ -67,18 +67,16 @@ function SuggestedPostCard({ post, author }: SuggestedPostCardProps) {
   );
 }
 
-export default async function BlogPostPage({ params }: { params: { id: string } }) {
-  const post = await getPost(params.id);
+export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const resolvedParams = await params;
+  const post = await getPost(resolvedParams.slug);
   
   if (!post) {
     notFound();
   }
 
-  const author = await getAuthorById(post.author?.toString() || '');
-
-  if (!author) {
-    notFound();
-  }
+  // Author is now included in the post response from our Prisma API
+  const author = post.author as unknown as Author;
 
   const suggestedPosts = await getSuggestedPosts(post.slug);
 

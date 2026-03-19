@@ -5,10 +5,11 @@ import { authOptions } from '../../auth/[...nextauth]/route';
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id: idParam } = await params;
     try {
-        const id = parseInt(params.id);
+        const id = parseInt(idParam);
         if (isNaN(id)) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
 
         const partner = await prisma.partner.findUnique({
@@ -26,13 +27,14 @@ export async function GET(
 
 export async function PUT(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id: idParam } = await params;
     try {
         const session = await getServerSession(authOptions);
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const id = parseInt(params.id);
+        const id = parseInt(idParam);
         if (isNaN(id)) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
 
         const body = await request.json();
@@ -54,13 +56,14 @@ export async function PUT(
 
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id: idParam } = await params;
     try {
         const session = await getServerSession(authOptions);
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const id = parseInt(params.id);
+        const id = parseInt(idParam);
         if (isNaN(id)) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
 
         await prisma.partner.delete({

@@ -14,9 +14,12 @@ export default async function DevelopersPage({ searchParams }: DevelopersPagePro
   const resolvedSearchParams = await searchParams;
   
   // Fetch data
+  const search = typeof resolvedSearchParams.search === 'string' ? resolvedSearchParams.search : undefined;
+  
   const developersData = await getAdminDevelopers({
     page: resolvedSearchParams.page ? parseInt(resolvedSearchParams.page as string) : 1,
     page_size: 10,
+    search,
   });
 
   return (
@@ -36,8 +39,20 @@ export default async function DevelopersPage({ searchParams }: DevelopersPagePro
         </div>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle>All Developers ({developersData.count})</CardTitle>
+            <div className="flex items-center space-x-2">
+              <form action="/admin/dashboard/developers" method="GET" className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  name="search"
+                  placeholder="Search developers..."
+                  defaultValue={search}
+                  className="flex h-9 w-64 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                />
+                <Button type="submit" variant="ghost" size="sm">Search</Button>
+              </form>
+            </div>
           </CardHeader>
           <CardContent>
             <Suspense fallback={<div>Loading...</div>}>

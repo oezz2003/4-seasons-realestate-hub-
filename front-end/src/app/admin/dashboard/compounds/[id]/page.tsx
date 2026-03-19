@@ -10,7 +10,7 @@ import Image from 'next/image';
 import { getImageUrl } from '@/lib/image-helpers';
 
 interface CompoundDetailsPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function CompoundDetailsPage({ params }: CompoundDetailsPageProps) {

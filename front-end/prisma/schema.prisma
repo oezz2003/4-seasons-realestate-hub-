@@ -1,9 +1,9 @@
-datasource db {
-  provider = "postgresql"
-}
-
 generator client {
   provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
 }
 
 model Developer {
@@ -28,8 +28,8 @@ model Location {
 model Amenity {
   id         Int        @id @default(autoincrement())
   name       String     @unique
-  compounds  Compound[]
-  properties Property[]
+  compounds  Compound[] @relation("AmenityToCompound")
+  properties Property[] @relation("AmenityToProperty")
 }
 
 model Compound {
@@ -37,15 +37,15 @@ model Compound {
   name         String     @unique
   slug         String     @unique
   developerId  Int
-  developer    Developer  @relation(fields: [developerId], references: [id], onDelete: Cascade)
   locationId   Int?
-  location     Location?  @relation(fields: [locationId], references: [id], onDelete: SetNull)
   mainImage    String?
   description  String?
   status       String?
   deliveryDate String?
-  amenities    Amenity[]
+  developer    Developer  @relation(fields: [developerId], references: [id], onDelete: Cascade)
+  location     Location?  @relation(fields: [locationId], references: [id])
   properties   Property[]
+  amenities    Amenity[]  @relation("AmenityToCompound")
 }
 
 model Property {
@@ -53,11 +53,8 @@ model Property {
   title          String
   slug           String          @unique
   compoundId     Int?
-  compound       Compound?       @relation(fields: [compoundId], references: [id], onDelete: SetNull)
   developerId    Int?
-  developer      Developer?      @relation(fields: [developerId], references: [id], onDelete: SetNull)
   locationId     Int?
-  location       Location?       @relation(fields: [locationId], references: [id], onDelete: SetNull)
   propertyType   String
   price          Decimal
   area           Int
@@ -69,16 +66,19 @@ model Property {
   mapImage       String?
   isNewLaunch    Boolean         @default(false)
   isFeatured     Boolean         @default(false)
-  amenities      Amenity[]
+  compound       Compound?       @relation(fields: [compoundId], references: [id])
+  developer      Developer?      @relation(fields: [developerId], references: [id])
+  location       Location?       @relation(fields: [locationId], references: [id])
   galleryImages  PropertyImage[]
+  amenities      Amenity[]       @relation("AmenityToProperty")
 }
 
 model PropertyImage {
   id         Int      @id @default(autoincrement())
   propertyId Int
-  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   image      String
   altText    String?
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 }
 
 model Author {
@@ -96,9 +96,9 @@ model BlogPost {
   content     String
   publishDate DateTime @default(now())
   authorId    Int?
-  author      Author?  @relation(fields: [authorId], references: [id], onDelete: SetNull)
   image       String?
   status      String   @default("Draft")
+  author      Author?  @relation(fields: [authorId], references: [id])
 }
 
 model Partner {
@@ -124,22 +124,20 @@ model ContactFormSubmission {
   submittedAt DateTime @default(now())
 }
 
-// NextAuth.js Models for Authentication
 model Account {
   id                String  @id @default(cuid())
   userId            String
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -157,9 +155,9 @@ model User {
   name          String?
   email         String?   @unique
   emailVerified DateTime?
-  password      String?
   image         String?
-  role          String    @default("ADMIN") // Basic RBAC
+  role          String    @default("ADMIN")
+  password      String?
   accounts      Account[]
   sessions      Session[]
 }

@@ -3,9 +3,9 @@ import { CompoundForm } from '@/components/dashboard/compound-form';
 
 export default async function NewCompoundPage() {
   const [developers, locations, amenities] = await Promise.all([
-    getDevelopers(),
-    getLocations(),
-    getAmenities(),
+    getDevelopers({ page_size: 1000 }),
+    getLocations({ page_size: 1000 } as any),
+    getAmenities(false, { page_size: 1000 } as any),
   ]);
 
   return (

@@ -5,10 +5,11 @@ import { authOptions } from '../../auth/[...nextauth]/route';
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id: idParam } = await params;
     try {
-        const id = parseInt(params.id);
+        const id = parseInt(idParam);
         if (isNaN(id)) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
 
         const property = await prisma.property.findUnique({
@@ -45,13 +46,14 @@ export async function GET(
 
 export async function PUT(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id: idParam } = await params;
     try {
         const session = await getServerSession(authOptions);
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const id = parseInt(params.id);
+        const id = parseInt(idParam);
         if (isNaN(id)) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
 
         const body = await request.json();
@@ -60,22 +62,58 @@ export async function PUT(
         if (body.slug !== undefined) data.slug = body.slug;
         if (body.property_type !== undefined) data.propertyType = body.property_type;
         if (body.price !== undefined) data.price = body.price;
-        if (body.area !== undefined) data.area = body.area;
-        if (body.bedrooms !== undefined) data.bedrooms = body.bedrooms;
-        if (body.bathrooms !== undefined) data.bathrooms = body.bathrooms;
+        if (body.area !== undefined) data.area = typeof body.area === 'string' ? parseInt(body.area) : body.area;
+        if (body.bedrooms !== undefined) data.bedrooms = typeof body.bedrooms === 'string' ? parseInt(body.bedrooms) : body.bedrooms;
+        if (body.bathrooms !== undefined) data.bathrooms = typeof body.bathrooms === 'string' ? parseInt(body.bathrooms) : body.bathrooms;
         if (body.description !== undefined) data.description = body.description;
         if (body.main_image !== undefined) data.mainImage = body.main_image;
         if (body.floor_plan_image !== undefined) data.floorPlanImage = body.floor_plan_image;
         if (body.map_image !== undefined) data.mapImage = body.map_image;
-        if (body.is_new_launch !== undefined) data.isNewLaunch = body.is_new_launch;
-        if (body.is_featured !== undefined) data.isFeatured = body.is_featured;
-        if (body.compound_id !== undefined || body.compound !== undefined) data.compoundId = body.compound_id || body.compound || null;
-        if (body.developer_id !== undefined || body.developer !== undefined) data.developerId = body.developer_id || body.developer || null;
-        if (body.location_id !== undefined || body.location !== undefined) data.locationId = body.location_id || body.location || null;
+        if (body.is_new_launch !== undefined) data.isNewLaunch = body.is_new_launch === true || body.is_new_launch === 'true';
+        if (body.is_featured !== undefined) data.isFeatured = body.is_featured === true || body.is_featured === 'true';
+        if (body.compound_id !== undefined || body.compound !== undefined) data.compoundId = body.compound_id ? parseInt(body.compound_id) : (body.compound ? parseInt(body.compound) : null);
+        if (body.developer_id !== undefined || body.developer !== undefined) data.developerId = body.developer_id ? parseInt(body.developer_id) : (body.developer ? parseInt(body.developer) : null);
+        if (body.location_id !== undefined || body.location !== undefined) data.locationId = body.location_id ? parseInt(body.location_id) : (body.location ? parseInt(body.location) : null);
+
+        // Handle amenities
+        if (body.amenities && Array.isArray(body.amenities)) {
+            data.amenities = {
+                set: body.amenities.map((id: any) => ({ id: parseInt(id) }))
+            };
+        }
+
+        // Handle gallery images - delete existing and create new
+        if (body.gallery_images && Array.isArray(body.gallery_images)) {
+            // We'll perform this in a transaction to be safe
+            const [updatedProperty] = await prisma.$transaction([
+                prisma.property.update({
+                    where: { id },
+                    data: {
+                        ...data,
+                        galleryImages: {
+                            deleteMany: {},
+                            create: body.gallery_images.map((img: any) => ({
+                                image: img.image,
+                                altText: img.alt_text || ''
+                            }))
+                        }
+                    },
+                    include: {
+                        galleryImages: true,
+                        amenities: true
+                    }
+                })
+            ]);
+            return NextResponse.json(updatedProperty);
+        }
 
         const property = await prisma.property.update({
             where: { id },
             data,
+            include: {
+                galleryImages: true,
+                amenities: true
+            }
         });
 
         return NextResponse.json(property);
@@ -87,13 +125,14 @@ export async function PUT(
 
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id: idParam } = await params;
     try {
         const session = await getServerSession(authOptions);
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const id = parseInt(params.id);
+        const id = parseInt(idParam);
         if (isNaN(id)) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
 
         await prisma.property.delete({

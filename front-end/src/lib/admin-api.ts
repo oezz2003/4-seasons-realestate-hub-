@@ -1,4 +1,3 @@
-import axios from 'axios';
 import {
   Property,
   Compound,
@@ -12,42 +11,7 @@ import {
   ContactFormSubmission
 } from './types';
 
-const ADMIN_API_BASE_URL = process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL || '/api/';
-
-// Create axios instance with default config
-const adminApi = axios.create({
-  baseURL: ADMIN_API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add request interceptor to include auth token
-adminApi.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      config.headers.Authorization = `Token ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Add response interceptor for error handling
-adminApi.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('authToken');
-      window.location.href = '/admin/login';
-    }
-    return Promise.reject(error);
-  }
-);
+const ADMIN_API_BASE_URL = (process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL || '/api/').replace(/\/$/, '') + '/';
 
 interface ApiResponse<T> {
   results: T[];
@@ -56,241 +20,321 @@ interface ApiResponse<T> {
   previous: string | null;
 }
 
+// Custom fetcher to replace axios instance
+const fetcher = async <T>(endpoint: string, options: RequestInit = {}, params?: Record<string, any>): Promise<T> => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+  const headers = new Headers(options.headers);
+  
+  if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
+    headers.set('Content-Type', 'application/json');
+  }
+  
+  if (token) {
+    headers.set('Authorization', `Token ${token}`);
+  }
+
+  let urlString = `${ADMIN_API_BASE_URL}${endpoint.replace(/^\//, '')}`;
+  
+  if (params) {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        searchParams.append(key, String(value));
+      }
+    });
+    const queryString = searchParams.toString();
+    if (queryString) {
+      urlString += (urlString.includes('?') ? '&' : '?') + queryString;
+    }
+  }
+
+  const response = await fetch(urlString, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    if (response.status === 401 && typeof window !== 'undefined') {
+      localStorage.removeItem('authToken');
+      if (!window.location.pathname.includes('/admin/login')) {
+        window.location.href = '/admin/login';
+      }
+    }
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || `API error: ${response.status} ${response.statusText}`);
+  }
+
+  if (response.status === 204) return {} as T;
+  return response.json();
+};
+
 // Properties API
 export const propertiesApi = {
   getAll: async (params?: Record<string, any>) => {
-    const response = await adminApi.get<ApiResponse<Property>>('properties/', { params });
-    return response.data;
+    return fetcher<ApiResponse<Property>>('properties/', {}, params);
   },
   getById: async (id: number) => {
-    const response = await adminApi.get<Property>(`properties/${id}/`);
-    return response.data;
+    return fetcher<Property>(`properties/${id}/`);
   },
   create: async (data: Partial<Property>) => {
-    const response = await adminApi.post<Property>('properties/', data);
-    return response.data;
+    return fetcher<Property>('properties/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
   update: async (id: number, data: Partial<Property>) => {
-    const response = await adminApi.put<Property>(`properties/${id}/`, data);
-    return response.data;
+    return fetcher<Property>(`properties/${id}/`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
   },
   delete: async (id: number) => {
-    await adminApi.delete(`properties/${id}/`);
+    return fetcher<void>(`properties/${id}/`, {
+      method: 'DELETE',
+    });
   },
   getFeatured: async () => {
-    const response = await adminApi.get<ApiResponse<Property>>('properties/featured/');
-    return response.data;
+    return fetcher<ApiResponse<Property>>('properties/featured/');
   },
   getNewLaunches: async () => {
-    const response = await adminApi.get<ApiResponse<Property>>('properties/new-launches/');
-    return response.data;
+    return fetcher<ApiResponse<Property>>('properties/new-launches/');
   },
 };
 
 // Compounds API
 export const compoundsApi = {
   getAll: async (params?: Record<string, any>) => {
-    const response = await adminApi.get<ApiResponse<Compound>>('compounds/', { params });
-    return response.data;
+    return fetcher<ApiResponse<Compound>>('compounds/', {}, params);
   },
   getById: async (id: number) => {
-    const response = await adminApi.get<Compound>(`compounds/${id}/`);
-    return response.data;
+    return fetcher<Compound>(`compounds/${id}/`);
   },
   create: async (data: Partial<Compound>) => {
-    const response = await adminApi.post<Compound>('compounds/', data);
-    return response.data;
+    return fetcher<Compound>('compounds/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
   update: async (id: number, data: Partial<Compound>) => {
-    const response = await adminApi.put<Compound>(`compounds/${id}/`, data);
-    return response.data;
+    return fetcher<Compound>(`compounds/${id}/`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
   },
   delete: async (id: number) => {
-    await adminApi.delete(`compounds/${id}/`);
+    return fetcher<void>(`compounds/${id}/`, {
+      method: 'DELETE',
+    });
   },
   getProperties: async (id: number) => {
-    const response = await adminApi.get<ApiResponse<Property>>(`compounds/${id}/properties/`);
-    return response.data;
+    return fetcher<ApiResponse<Property>>(`compounds/${id}/properties/`);
   },
 };
 
 // Developers API
 export const developersApi = {
   getAll: async (params?: Record<string, any>) => {
-    const response = await adminApi.get<ApiResponse<Developer>>('developers/', { params });
-    return response.data;
+    return fetcher<ApiResponse<Developer>>('developers/', {}, params);
   },
   getById: async (id: number) => {
-    const response = await adminApi.get<Developer>(`developers/${id}/`);
-    return response.data;
+    return fetcher<Developer>(`developers/${id}/`);
   },
   create: async (data: Partial<Developer>) => {
-    const response = await adminApi.post<Developer>('developers/', data);
-    return response.data;
+    return fetcher<Developer>('developers/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
   update: async (id: number, data: Partial<Developer>) => {
-    const response = await adminApi.put<Developer>(`developers/${id}/`, data);
-    return response.data;
+    return fetcher<Developer>(`developers/${id}/`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
   },
   delete: async (id: number) => {
-    await adminApi.delete(`developers/${id}/`);
+    return fetcher<void>(`developers/${id}/`, {
+      method: 'DELETE',
+    });
   },
   getCompounds: async (id: number) => {
-    const response = await adminApi.get<ApiResponse<Compound>>(`developers/${id}/compounds/`);
-    return response.data;
+    return fetcher<ApiResponse<Compound>>(`developers/${id}/compounds/`);
   },
 };
 
 // Blog Posts API
 export const blogApi = {
   getAll: async (params?: Record<string, any>) => {
-    const response = await adminApi.get<ApiResponse<BlogPost>>('blog-posts/', { params });
-    return response.data;
+    return fetcher<ApiResponse<BlogPost>>('blog-posts/', {}, params);
   },
   getById: async (id: number) => {
-    const response = await adminApi.get<BlogPost>(`blog-posts/${id}/`);
-    return response.data;
+    return fetcher<BlogPost>(`blog-posts/${id}/`);
   },
   create: async (data: Partial<BlogPost>) => {
-    const response = await adminApi.post<BlogPost>('blog-posts/', data);
-    return response.data;
+    return fetcher<BlogPost>('blog-posts/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
   update: async (id: number, data: Partial<BlogPost>) => {
-    const response = await adminApi.put<BlogPost>(`blog-posts/${id}/`, data);
-    return response.data;
+    return fetcher<BlogPost>(`blog-posts/${id}/`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
   },
   delete: async (id: number) => {
-    await adminApi.delete(`blog-posts/${id}/`);
+    return fetcher<void>(`blog-posts/${id}/`, {
+      method: 'DELETE',
+    });
   },
 };
 
 // Locations API
 export const locationsApi = {
   getAll: async (params?: Record<string, any>) => {
-    const response = await adminApi.get<ApiResponse<Location>>('locations/', { params });
-    return response.data;
+    return fetcher<ApiResponse<Location>>('locations/', {}, params);
   },
   getById: async (id: number) => {
-    const response = await adminApi.get<Location>(`locations/${id}/`);
-    return response.data;
+    return fetcher<Location>(`locations/${id}/`);
   },
   create: async (data: Partial<Location>) => {
-    const response = await adminApi.post<Location>('locations/', data);
-    return response.data;
+    return fetcher<Location>('locations/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
   update: async (id: number, data: Partial<Location>) => {
-    const response = await adminApi.put<Location>(`locations/${id}/`, data);
-    return response.data;
+    return fetcher<Location>(`locations/${id}/`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
   },
   delete: async (id: number) => {
-    await adminApi.delete(`locations/${id}/`);
+    return fetcher<void>(`locations/${id}/`, {
+      method: 'DELETE',
+    });
   },
 };
 
 // Amenities API
 export const amenitiesApi = {
   getAll: async (params?: Record<string, any>) => {
-    const response = await adminApi.get<ApiResponse<Amenity>>('amenities/', { params });
-    return response.data;
+    return fetcher<ApiResponse<Amenity>>('amenities/', {}, params);
   },
   getById: async (id: number) => {
-    const response = await adminApi.get<Amenity>(`amenities/${id}/`);
-    return response.data;
+    return fetcher<Amenity>(`amenities/${id}/`);
   },
   create: async (data: Partial<Amenity>) => {
-    const response = await adminApi.post<Amenity>('amenities/', data);
-    return response.data;
+    return fetcher<Amenity>('amenities/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
   update: async (id: number, data: Partial<Amenity>) => {
-    const response = await adminApi.put<Amenity>(`amenities/${id}/`, data);
-    return response.data;
+    return fetcher<Amenity>(`amenities/${id}/`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
   },
   delete: async (id: number) => {
-    await adminApi.delete(`amenities/${id}/`);
+    return fetcher<void>(`amenities/${id}/`, {
+      method: 'DELETE',
+    });
   },
 };
 
 // Authors API
 export const authorsApi = {
   getAll: async (params?: Record<string, any>) => {
-    const response = await adminApi.get<ApiResponse<Author>>('authors/', { params });
-    return response.data;
+    return fetcher<ApiResponse<Author>>('authors/', {}, params);
   },
   getById: async (id: number) => {
-    const response = await adminApi.get<Author>(`authors/${id}/`);
-    return response.data;
+    return fetcher<Author>(`authors/${id}/`);
   },
   create: async (data: Partial<Author>) => {
-    const response = await adminApi.post<Author>('authors/', data);
-    return response.data;
+    return fetcher<Author>('authors/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
   update: async (id: number, data: Partial<Author>) => {
-    const response = await adminApi.put<Author>(`authors/${id}/`, data);
-    return response.data;
+    return fetcher<Author>(`authors/${id}/`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
   },
   delete: async (id: number) => {
-    await adminApi.delete(`authors/${id}/`);
+    return fetcher<void>(`authors/${id}/`, {
+      method: 'DELETE',
+    });
   },
 };
 
 // Partners API
 export const partnersApi = {
   getAll: async (params?: Record<string, any>) => {
-    const response = await adminApi.get<ApiResponse<Partner>>('partners/', { params });
-    return response.data;
+    return fetcher<ApiResponse<Partner>>('partners/', {}, params);
   },
   getById: async (id: number) => {
-    const response = await adminApi.get<Partner>(`partners/${id}/`);
-    return response.data;
+    return fetcher<Partner>(`partners/${id}/`);
   },
   create: async (data: Partial<Partner>) => {
-    const response = await adminApi.post<Partner>('partners/', data);
-    return response.data;
+    return fetcher<Partner>('partners/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
   update: async (id: number, data: Partial<Partner>) => {
-    const response = await adminApi.put<Partner>(`partners/${id}/`, data);
-    return response.data;
+    return fetcher<Partner>(`partners/${id}/`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
   },
   delete: async (id: number) => {
-    await adminApi.delete(`partners/${id}/`);
+    return fetcher<void>(`partners/${id}/`, {
+      method: 'DELETE',
+    });
   },
 };
 
 // Testimonials API
 export const testimonialsApi = {
   getAll: async (params?: Record<string, any>) => {
-    const response = await adminApi.get<ApiResponse<Testimonial>>('testimonials/', { params });
-    return response.data;
+    return fetcher<ApiResponse<Testimonial>>('testimonials/', {}, params);
   },
   getById: async (id: number) => {
-    const response = await adminApi.get<Testimonial>(`testimonials/${id}/`);
-    return response.data;
+    return fetcher<Testimonial>(`testimonials/${id}/`);
   },
   create: async (data: Partial<Testimonial>) => {
-    const response = await adminApi.post<Testimonial>('testimonials/', data);
-    return response.data;
+    return fetcher<Testimonial>('testimonials/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
   update: async (id: number, data: Partial<Testimonial>) => {
-    const response = await adminApi.put<Testimonial>(`testimonials/${id}/`, data);
-    return response.data;
+    return fetcher<Testimonial>(`testimonials/${id}/`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
   },
   delete: async (id: number) => {
-    await adminApi.delete(`testimonials/${id}/`);
+    return fetcher<void>(`testimonials/${id}/`, {
+      method: 'DELETE',
+    });
   },
 };
 
 // Contact Submissions API
 export const contactSubmissionsApi = {
   getAll: async (params?: Record<string, any>) => {
-    const response = await adminApi.get<ApiResponse<ContactFormSubmission>>('contact-submissions/', { params });
-    return response.data;
+    return fetcher<ApiResponse<ContactFormSubmission>>('contact-submissions/', {}, params);
   },
   getById: async (id: number) => {
-    const response = await adminApi.get<ContactFormSubmission>(`contact-submissions/${id}/`);
-    return response.data;
+    return fetcher<ContactFormSubmission>(`contact-submissions/${id}/`);
   },
   delete: async (id: number) => {
-    await adminApi.delete(`contact-submissions/${id}/`);
+    return fetcher<void>(`contact-submissions/${id}/`, {
+      method: 'DELETE',
+    });
   },
 };
 
@@ -301,28 +345,23 @@ export const uploadApi = {
     formData.append('image', file);
     formData.append('type', type);
 
-    const response = await adminApi.post('/upload/image/', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    return fetcher<any>('upload/image/', {
+      method: 'POST',
+      body: formData,
     });
-    return response.data;
   },
   uploadMultipleImages: async (files: File[], type: string) => {
     const formData = new FormData();
-    files.forEach((file, index) => {
+    files.forEach((file) => {
       formData.append('image', file);
     });
     formData.append('type', type);
 
-    const response = await adminApi.post('/upload/image/', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    return fetcher<any>('upload/image/', {
+      method: 'POST',
+      body: formData,
     });
-    return response.data;
   },
 };
 
-export default adminApi;
-
+export default fetcher;

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { PropertyCard } from "@/components/property-card";
 import { Property } from "@/lib/types";
 
@@ -78,8 +79,24 @@ export function SearchPageClient({
     });
   }, [properties, filters]);
 
+  const router = useRouter();
+
   const updateFilter = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
+    
+    // Update URL to sync with filters (Search Engine optimization)
+    const params = new URLSearchParams();
+    const currentFilters = { ...filters, [key]: value };
+    
+    if (currentFilters.search) params.set('q', currentFilters.search);
+    if (currentFilters.location && currentFilters.location !== 'all-locations') params.set('location', currentFilters.location);
+    if (currentFilters.developer && currentFilters.developer !== 'all-developers') params.set('developer', currentFilters.developer);
+    if (currentFilters.type && currentFilters.type !== 'all-types') params.set('type', currentFilters.type);
+    if (currentFilters.beds && currentFilters.beds !== 'all-beds') params.set('beds', currentFilters.beds);
+    if (currentFilters.minPrice) params.set('minPrice', currentFilters.minPrice);
+    if (currentFilters.maxPrice) params.set('maxPrice', currentFilters.maxPrice);
+    
+    router.push(`/search?${params.toString()}`, { scroll: false });
   };
 
   return (

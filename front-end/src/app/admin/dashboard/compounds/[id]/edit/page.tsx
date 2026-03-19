@@ -3,7 +3,7 @@ import { getCompoundById, getDevelopers, getLocations, getAmenities } from '@/li
 import { CompoundForm } from '@/components/dashboard/compound-form';
 
 interface EditCompoundPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function EditCompoundPage({ params }: EditCompoundPageProps) {
@@ -16,9 +16,9 @@ export default async function EditCompoundPage({ params }: EditCompoundPageProps
   }
 
   const [developers, locations, amenities] = await Promise.all([
-    getDevelopers(),
-    getLocations(),
-    getAmenities(),
+    getDevelopers({ page_size: 1000 }),
+    getLocations({ page_size: 1000 } as any),
+    getAmenities(false, { page_size: 1000 } as any),
   ]);
 
   return (

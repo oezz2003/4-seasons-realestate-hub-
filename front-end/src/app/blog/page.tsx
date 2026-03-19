@@ -65,18 +65,17 @@ function PostCard({ post, author }: PostCardProps) {
   );
 }
 
-export default async function BlogPage() {
-  const postsData = await getBlogPosts();
-  if (!postsData || postsData.results.length === 0) {
-    return <div className="container mx-auto px-4 py-8">No blog posts found.</div>;
+export default async function BlogPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const resolvedSearchParams = await searchParams;
+  const query = resolvedSearchParams.q || '';
+  
+  const postsData = await getBlogPosts({ search: query });
+  
+  if (!postsData) {
+    return <div className="container mx-auto px-4 py-8">Error loading blog posts.</div>;
   }
 
-  const postsWithAuthors = await Promise.all(
-    postsData.results.map(async (post: BlogPost) => {
-      const author = await getAuthorById(post.author?.toString() || '');
-      return { post, author };
-    })
-  );
+  const posts = postsData.results;
 
   return (
     <div className="container mx-auto py-12 px-4 md:py-20">
@@ -89,15 +88,41 @@ export default async function BlogPage() {
             Your source for the latest news, tips, and trends in the Egyptian property market.
           </p>
         </div>
+        
+        {/* Search Bar */}
+        <div className="mt-8 max-w-md mx-auto">
+          <form action="/blog" method="GET" className="relative flex items-center">
+            <input
+              type="text"
+              name="q"
+              placeholder="Search articles..."
+              defaultValue={query}
+              className="w-full px-4 py-3 pr-12 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent shadow-sm"
+            />
+            <Button type="submit" size="icon" variant="ghost" className="absolute right-2 rounded-full">
+              <ArrowRight className="h-5 w-5" />
+            </Button>
+          </form>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {postsWithAuthors.map(({ post, author }, index: number) => (
-          <div key={post.id} style={{ animationDelay: `${index * 0.1 + 0.2}s` }}>
-            {author && <PostCard post={post} author={author} />}
-          </div>
-        ))}
-      </div>
+      {posts.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {posts.map((post: BlogPost, index: number) => (
+            <div key={post.id} style={{ animationDelay: `${index * 0.1 + 0.2}s` }}>
+              <PostCard post={post} author={post.author as unknown as Author} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-20">
+          <h2 className="text-2xl font-bold">No results found</h2>
+          <p className="text-muted-foreground mt-2">Try adjusting your search query.</p>
+          <Button asChild variant="link" className="mt-4">
+            <Link href="/blog">Clear search</Link>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

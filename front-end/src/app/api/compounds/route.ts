@@ -75,17 +75,30 @@ export async function POST(request: Request) {
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const body = await request.json();
+        const data: any = {
+            name: body.name,
+            slug: body.slug || slugify(body.name),
+            description: body.description,
+            mainImage: body.main_image,
+            status: body.status,
+            deliveryDate: body.delivery_date,
+            developerId: body.developer_id ? parseInt(body.developer_id) : (body.developer ? parseInt(body.developer) : null),
+            locationId: body.location_id ? parseInt(body.location_id) : (body.location ? parseInt(body.location) : null),
+        };
+
+        if (body.amenities && Array.isArray(body.amenities)) {
+            data.amenities = {
+                connect: body.amenities.map((id: any) => ({ id: parseInt(id) }))
+            };
+        }
+
         const compound = await prisma.compound.create({
-            data: {
-                name: body.name,
-                slug: body.slug || slugify(body.name),
-                description: body.description,
-                mainImage: body.main_image,
-                status: body.status,
-                deliveryDate: body.delivery_date,
-                developerId: body.developer_id || body.developer,
-                locationId: body.location_id || body.location,
-            },
+            data,
+            include: {
+                amenities: true,
+                developer: true,
+                location: true
+            }
         });
 
         return NextResponse.json(compound, { status: 201 });

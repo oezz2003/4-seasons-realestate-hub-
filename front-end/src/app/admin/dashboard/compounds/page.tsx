@@ -1,26 +1,13 @@
-import { ColumnDef } from '@tanstack/react-table';
 import { Suspense } from 'react';
 import { getAdminCompounds } from '@/lib/api';
-import { DataTable } from '@/components/dashboard/data-table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Eye, Edit, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import { CompoundsTable } from './table';
 
 interface CompoundsPageProps {
   searchParams: { [key: string]: string | string[] | undefined };
 }
-
-type CompoundTableRow = {
-  id: string;
-  name: string;
-  developer: string;
-  location: string;
-  status: string;
-  delivery_date: string;
-  actions: React.ReactNode;
-};
 
 export default async function CompoundsPage({ searchParams }: CompoundsPageProps) {
   // Await searchParams for Next.js 15 compatibility
@@ -29,69 +16,23 @@ export default async function CompoundsPage({ searchParams }: CompoundsPageProps
   // Fetch data
   const page = resolvedSearchParams.page ? parseInt(resolvedSearchParams.page as string) : 1;
   const pageSize = resolvedSearchParams.page_size ? parseInt(resolvedSearchParams.page_size as string) : 10;
+  const search = typeof resolvedSearchParams.search === 'string' ? resolvedSearchParams.search : undefined;
   
   const compoundsData = await getAdminCompounds({
     page,
     page_size: pageSize,
+    search,
   });
 
-  // Transform data for the table
-  const tableData: CompoundTableRow[] = compoundsData.results.map((compound) => ({
-    id: compound.id.toString(),
+  // Transform data for the table component
+  const tableData = compoundsData.results.map((compound) => ({
+    id: compound.id,
     name: compound.name,
     developer: compound.developer?.name || 'N/A',
     location: compound.location?.name || 'N/A',
-    status: (
-      <Badge variant={compound.status === 'Active' ? 'default' : 'secondary'}>
-        {compound.status}
-      </Badge>
-    ) as any,
+    status_raw: compound.status,
     delivery_date: compound.delivery_date,
-    actions: (
-      <div className="flex gap-2">
-        <Button variant="outline" size="sm" asChild>
-          <Link href={`/admin/dashboard/compounds/${compound.id}`}>
-            <Eye className="h-4 w-4" />
-          </Link>
-        </Button>
-        <Button variant="outline" size="sm" asChild>
-          <Link href={`/admin/dashboard/compounds/${compound.id}/edit`}>
-            <Edit className="h-4 w-4" />
-          </Link>
-        </Button>
-        <Button variant="destructive" size="sm">
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-    ),
   }));
-
-  const columns: ColumnDef<CompoundTableRow>[] = [
-    {
-      accessorKey: 'name',
-      header: 'Name',
-    },
-    {
-      accessorKey: 'developer',
-      header: 'Developer',
-    },
-    {
-      accessorKey: 'location',
-      header: 'Location',
-    },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-    },
-    {
-      accessorKey: 'delivery_date',
-      header: 'Delivery Date',
-    },
-    {
-      accessorKey: 'actions',
-      header: 'Actions',
-    },
-  ];
 
   return (
     <div className="space-y-6">
@@ -110,22 +51,29 @@ export default async function CompoundsPage({ searchParams }: CompoundsPageProps
         </div>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle>All Compounds ({compoundsData.count})</CardTitle>
+            <div className="flex items-center space-x-2">
+              <form action="/admin/dashboard/compounds" method="GET" className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  name="search"
+                  placeholder="Search compounds..."
+                  defaultValue={search}
+                  className="flex h-9 w-64 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                />
+                <Button type="submit" variant="ghost" size="sm">Search</Button>
+              </form>
+            </div>
           </CardHeader>
           <CardContent>
             <Suspense fallback={<div>Loading...</div>}>
-              <DataTable
+              <CompoundsTable 
                 data={tableData}
-                columns={columns}
-                pagination={{
-                  currentPage: page,
-                  totalPages: Math.ceil(compoundsData.count / pageSize),
-                  totalCount: compoundsData.count,
-                  pageSize,
-                  baseUrl: '/admin/dashboard/compounds',
-                  showPageSizeSelector: true,
-                }}
+                page={page}
+                totalPages={Math.ceil(compoundsData.count / pageSize)}
+                totalCount={compoundsData.count}
+                pageSize={pageSize}
               />
             </Suspense>
           </CardContent>

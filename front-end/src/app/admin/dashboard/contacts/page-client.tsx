@@ -15,6 +15,7 @@ export function ContactsPageClient() {
     const [data, setData] = useState<ContactFormSubmission[]>([]);
     const [count, setCount] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState('');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -23,6 +24,7 @@ export function ContactsPageClient() {
                 const response = await contactSubmissionsApi.getAll({
                     page,
                     page_size: pageSize,
+                    search: search || undefined,
                 });
                 setData(response.results);
                 setCount(response.count);
@@ -33,8 +35,12 @@ export function ContactsPageClient() {
             }
         };
 
-        fetchData();
-    }, [page, pageSize]);
+        const timer = setTimeout(() => {
+            fetchData();
+        }, 300); // Debounce search
+
+        return () => clearTimeout(timer);
+    }, [page, pageSize, search]);
 
     return (
         <div className="space-y-6">
@@ -48,8 +54,19 @@ export function ContactsPageClient() {
             </div>
 
             <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle>All Submissions ({count})</CardTitle>
+                    <div className="flex items-center space-x-2">
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="Search submissions..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="flex h-9 w-64 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                            />
+                        </div>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     {loading ? (

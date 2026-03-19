@@ -144,8 +144,12 @@ export default function ContactPage() {
                 <div className="overflow-hidden py-1">
                     <h2 className="text-2xl font-bold font-headline mb-4 animate-title-reveal">Find Us On The Map</h2>
                 </div>
-                <div className="relative w-full h-80 rounded-lg overflow-hidden shadow-md">
-                   <Image src="https://placehold.co/800x400.png" alt="Location map" data-ai-hint="map location" fill className="object-cover" />
+                <div className="relative w-full h-80 rounded-lg overflow-hidden shadow-md bg-primary/5 flex items-center justify-center">
+                   <div className="text-center p-6">
+                     <MapPin className="w-12 h-12 text-primary/40 mx-auto mb-3" />
+                     <p className="text-muted-foreground font-medium">Find us in Cairo, Egypt</p>
+                     <p className="text-sm text-muted-foreground/60 mt-1">123 Real Estate St, New Cairo</p>
+                   </div>
                 </div>
             </div>
         </div>

@@ -38,6 +38,12 @@ const nextConfig: NextConfig = {
         port: apiPort,
         pathname: normalizedMediaPath,
       },
+      {
+        protocol: 'http',
+        hostname: 's3-l04ssgk8k44wk88kc4sokcg0.76.13.143.124.sslip.io',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };

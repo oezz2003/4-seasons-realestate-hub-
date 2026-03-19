@@ -68,6 +68,8 @@ export async function POST(request: Request) {
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const body = await request.json();
+        const authorId = body.author_id ? parseInt(body.author_id) : (body.author ? parseInt(body.author) : null);
+        
         const post = await prisma.blogPost.create({
             data: {
                 title: body.title,
@@ -76,7 +78,7 @@ export async function POST(request: Request) {
                 content: body.content,
                 image: body.image,
                 status: body.status || 'Draft',
-                authorId: body.author_id || body.author || null,
+                authorId: authorId,
             },
         });
 

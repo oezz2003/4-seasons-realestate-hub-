@@ -15,12 +15,10 @@ export interface UploadResult {
 // Image validation
 export const validateImage = (file: File): { valid: boolean; error?: string } => {
   const maxSize = 5 * 1024 * 1024; // 5MB
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-  
-  if (!allowedTypes.includes(file.type)) {
+  if (!file.type.startsWith('image/')) {
     return {
       valid: false,
-      error: 'Invalid file type. Please upload JPEG, PNG, or WebP images only.',
+      error: `Invalid file type (${file.type}). Please upload images only (JPEG, PNG, WebP, etc.).`,
     };
   }
   
@@ -82,7 +80,7 @@ export const uploadMultipleImages = async (
   try {
     const result = await uploadApi.uploadMultipleImages(files, type);
     
-    // Handle new backend response format
+    // 1. Handle normalized array format from backend
     if (result.images && Array.isArray(result.images)) {
       return result.images.map((img: UploadResult) => ({
         ...img,
@@ -91,12 +89,25 @@ export const uploadMultipleImages = async (
       }));
     }
     
-    // Fallback for old format
-    return result.map((img: UploadResult) => ({
-      ...img,
-      id: String(img.id ?? ''),
-      image: normalizeMediaPath(img.image),
-    }));
+    // 2. Handle direct array format
+    if (Array.isArray(result)) {
+      return result.map((img: UploadResult) => ({
+        ...img,
+        id: String(img.id ?? ''),
+        image: normalizeMediaPath(img.image),
+      }));
+    }
+
+    // 3. Fallback: single object returned instead of array
+    if (result && typeof result === 'object') {
+      return [{
+        ...result,
+        id: String(result.id ?? ''),
+        image: normalizeMediaPath(result.image),
+      }];
+    }
+    
+    return [];
   } catch (error) {
     throw new Error(`Bulk upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }

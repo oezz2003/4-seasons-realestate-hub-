@@ -9,7 +9,7 @@ import { Edit, Trash2, Plus } from 'lucide-react';
 import Link from 'next/link';
 
 interface TestimonialsPageProps {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 type TestimonialTableRow = {
@@ -21,9 +21,10 @@ type TestimonialTableRow = {
 };
 
 export default async function TestimonialsPage({ searchParams }: TestimonialsPageProps) {
+  const resolvedSearchParams = await searchParams;
   // Fetch data
-  const page = searchParams.page ? parseInt(searchParams.page as string) : 1;
-  const pageSize = searchParams.page_size ? parseInt(searchParams.page_size as string) : 10;
+  const page = resolvedSearchParams.page ? parseInt(resolvedSearchParams.page as string) : 1;
+  const pageSize = resolvedSearchParams.page_size ? parseInt(resolvedSearchParams.page_size as string) : 10;
 
   const testimonialsData = await getTestimonials({
     page,

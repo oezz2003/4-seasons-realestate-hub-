@@ -1,7 +1,7 @@
 import { BlogPostDetailsClient } from '../blog-post-detail-client';
 
 interface BlogPostDetailsPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function BlogPostDetailsPage({ params }: BlogPostDetailsPageProps) {

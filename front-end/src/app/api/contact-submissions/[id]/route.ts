@@ -5,13 +5,14 @@ import { authOptions } from '../../auth/[...nextauth]/route';
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id: idParam } = await params;
     try {
         const session = await getServerSession(authOptions);
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const id = parseInt(params.id);
+        const id = parseInt(idParam);
         if (isNaN(id)) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
 
         const submission = await prisma.contactFormSubmission.findUnique({
@@ -32,13 +33,14 @@ export async function GET(
 
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id: idParam } = await params;
     try {
         const session = await getServerSession(authOptions);
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const id = parseInt(params.id);
+        const id = parseInt(idParam);
         if (isNaN(id)) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
 
         await prisma.contactFormSubmission.delete({

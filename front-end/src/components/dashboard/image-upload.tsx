@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Upload, X, Loader2 } from 'lucide-react';
 import { uploadImage, type UploadResult } from '@/lib/upload-utils';
 import { useToast } from '@/hooks/use-toast';
+import { getImageUrl } from '@/lib/image-helpers';
 
 interface ImageUploadProps {
   onUpload?: (imageUrl: string) => void;
@@ -24,13 +25,13 @@ export function ImageUpload({
   autoUpload = true,
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
-  const [preview, setPreview] = useState<string | null>(currentImage || null);
+  const [preview, setPreview] = useState<string | null>(currentImage ? getImageUrl(currentImage) : null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previewUrlRef = useRef<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    setPreview(currentImage || null);
+    setPreview(currentImage ? getImageUrl(currentImage) : null);
   }, [currentImage]);
 
   useEffect(() => {
@@ -62,7 +63,7 @@ export function ImageUpload({
 
     try {
       const result = await uploadImage(file, type);
-      const imageUrl = extractImageUrl(result);
+      const imageUrl = getImageUrl(extractImageUrl(result));
       setPreview(imageUrl);
       onUpload?.(imageUrl);
       onFileSelect?.(file, imageUrl);
@@ -133,7 +134,7 @@ export function ImageUpload({
             <div className="flex flex-col items-center space-y-2">
               <Upload className="h-8 w-8 text-gray-400" />
               <p className="text-sm text-gray-500">Click to upload image</p>
-              <p className="text-xs text-gray-400">PNG, JPG, WebP up to 5MB</p>
+               <p className="text-xs text-gray-400">Images (JPEG, PNG, WebP) up to 5MB</p>
             </div>
           )}
         </div>

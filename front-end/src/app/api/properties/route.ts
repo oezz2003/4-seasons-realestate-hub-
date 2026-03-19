@@ -106,27 +106,48 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json();
-        const data = {
+        const data: any = {
             title: body.title,
             slug: body.slug || slugify(body.title),
             propertyType: body.property_type,
             price: body.price,
-            area: body.area,
-            bedrooms: body.bedrooms,
-            bathrooms: body.bathrooms,
+            area: typeof body.area === 'string' ? parseInt(body.area) : body.area,
+            bedrooms: typeof body.bedrooms === 'string' ? parseInt(body.bedrooms) : body.bedrooms,
+            bathrooms: typeof body.bathrooms === 'string' ? parseInt(body.bathrooms) : body.bathrooms,
             description: body.description,
             mainImage: body.main_image,
             floorPlanImage: body.floor_plan_image,
             mapImage: body.map_image,
-            isNewLaunch: body.is_new_launch || false,
-            isFeatured: body.is_featured || false,
-            compoundId: body.compound_id || body.compound,
-            developerId: body.developer_id || body.developer,
-            locationId: body.location_id || body.location,
+            isNewLaunch: body.is_new_launch === true || body.is_new_launch === 'true',
+            isFeatured: body.is_featured === true || body.is_featured === 'true',
+            compoundId: body.compound_id ? parseInt(body.compound_id) : (body.compound ? parseInt(body.compound) : null),
+            developerId: body.developer_id ? parseInt(body.developer_id) : (body.developer ? parseInt(body.developer) : null),
+            locationId: body.location_id ? parseInt(body.location_id) : (body.location ? parseInt(body.location) : null),
         };
+
+        // Handle amenities
+        if (body.amenities && Array.isArray(body.amenities)) {
+            data.amenities = {
+                connect: body.amenities.map((id: any) => ({ id: parseInt(id) }))
+            };
+        }
+
+        // Handle gallery images
+        if (body.gallery_images && Array.isArray(body.gallery_images)) {
+            data.galleryImages = {
+                create: body.gallery_images.map((img: any) => ({
+                    image: img.image,
+                    altText: img.alt_text || ''
+                }))
+            };
+        }
 
         const property = await prisma.property.create({
             data,
+            include: {
+                amenities: true,
+                galleryImages: true
+            }
         });
 
         return NextResponse.json(property, { status: 201 });

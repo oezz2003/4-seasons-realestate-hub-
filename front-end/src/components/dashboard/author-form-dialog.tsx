@@ -40,6 +40,8 @@ interface AuthorFormDialogProps {
 export function AuthorFormDialog({ author, open, onOpenChange, onSuccess }: AuthorFormDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [image, setImage] = useState((author as any)?.image || '');
+  const [imagePreview, setImagePreview] = useState<string | null>((author as any)?.image || null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const { toast } = useToast();
 
   const {
@@ -62,16 +64,29 @@ export function AuthorFormDialog({ author, open, onOpenChange, onSuccess }: Auth
         name: author?.name || '',
         bio: (author as any)?.bio || '',
       });
-      setImage((author as any)?.image || '');
+      const initialImage = (author as any)?.image || '';
+      setImage(initialImage);
+      setImagePreview(initialImage || null);
+      setImageFile(null);
     }
   }, [author, open, reset]);
 
   const onSubmit = async (data: AuthorFormData) => {
     setIsLoading(true);
     try {
+      let finalImage = image;
+
+      if (imageFile) {
+        const { uploadImage } = await import('@/lib/upload-utils');
+        const result = await uploadImage(imageFile, 'author-image');
+        finalImage = typeof result === 'string' ? result : result.image;
+        setImage(finalImage);
+        setImageFile(null);
+      }
+
       const formData = {
         ...data,
-        image,
+        image: finalImage,
       };
 
       if (author) {
@@ -139,8 +154,15 @@ export function AuthorFormDialog({ author, open, onOpenChange, onSuccess }: Auth
             <div className="space-y-2">
               <Label>Profile Image</Label>
               <ImageUpload
-                onUpload={setImage}
-                currentImage={image}
+                autoUpload={false}
+                onFileSelect={(file, previewUrl) => {
+                  setImageFile(file);
+                  setImagePreview(previewUrl);
+                  if (!file) {
+                    setImage('');
+                  }
+                }}
+                currentImage={imagePreview}
                 type="author-image"
               />
             </div>

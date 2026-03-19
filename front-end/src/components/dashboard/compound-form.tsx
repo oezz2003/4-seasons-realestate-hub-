@@ -47,6 +47,8 @@ interface CompoundFormProps {
 export function CompoundForm({ compound, developers, locations, amenities }: CompoundFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [mainImage, setMainImage] = useState(compound?.main_image || '');
+  const [mainImagePreview, setMainImagePreview] = useState<string | null>(compound?.main_image || null);
+  const [mainImageFile, setMainImageFile] = useState<File | null>(null);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -73,6 +75,16 @@ export function CompoundForm({ compound, developers, locations, amenities }: Com
   const onSubmit = async (data: CompoundFormData) => {
     setIsLoading(true);
     try {
+      let finalMainImage = mainImage;
+
+      if (mainImageFile) {
+        const { uploadImage } = await import('@/lib/upload-utils');
+        const result = await uploadImage(mainImageFile, 'compound');
+        finalMainImage = typeof result === 'string' ? result : result.image;
+        setMainImage(finalMainImage);
+        setMainImageFile(null);
+      }
+
       const formData: any = {
         name: data.name,
         developer: data.developer,
@@ -81,8 +93,8 @@ export function CompoundForm({ compound, developers, locations, amenities }: Com
       };
 
       // Only include optional fields if they have values
-      if (mainImage) {
-        formData.main_image = mainImage;
+      if (finalMainImage) {
+        formData.main_image = finalMainImage;
       }
       if (data.delivery_date) {
         formData.delivery_date = data.delivery_date;
@@ -210,8 +222,15 @@ export function CompoundForm({ compound, developers, locations, amenities }: Com
           </CardHeader>
           <CardContent>
             <ImageUpload
-              currentImage={mainImage}
-              onUpload={setMainImage}
+              autoUpload={false}
+              currentImage={mainImagePreview}
+              onFileSelect={(file, previewUrl) => {
+                setMainImageFile(file);
+                setMainImagePreview(previewUrl);
+                if (!file) {
+                  setMainImage('');
+                }
+              }}
               type="compound"
             />
           </CardContent>

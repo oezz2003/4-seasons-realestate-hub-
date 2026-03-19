@@ -52,15 +52,8 @@ const initialState: PropertiesState = {
 // Async thunks
 export const fetchProperties = createAsyncThunk(
   'properties/fetchAll',
-  async (params: { page?: number; filters?: Partial<PropertiesState['filters']> } = {}, { getState, rejectWithValue }) => {
+  async (params: { page?: number; filters?: Partial<PropertiesState['filters']> } = {}, { rejectWithValue }) => {
     try {
-      const state = getState() as { auth: { token: string | null } };
-      const token = state.auth.token;
-
-      if (!token) {
-        return rejectWithValue('Authentication required');
-      }
-
       const { page = 1, filters: overrideFilters = {} } = params;
       const mergedFilters = { ...initialState.filters, ...overrideFilters };
 
@@ -106,16 +99,13 @@ export const fetchProperties = createAsyncThunk(
 
 export const fetchProperty = createAsyncThunk(
   'properties/fetchOne',
-  async (id: string, { getState, rejectWithValue }) => {
+  async (id: string, { rejectWithValue }) => {
     try {
-      const state = getState() as { auth: { token: string | null } };
-      const token = state.auth.token;
-
-      if (!token) {
-        return rejectWithValue('No authentication token');
-      }
-
-      const response = await fetch(`/api/properties/${id}/`);
+      const response = await fetch(`/api/properties/${id}/`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!response.ok) {
         return rejectWithValue('Failed to fetch property');
@@ -131,15 +121,8 @@ export const fetchProperty = createAsyncThunk(
 
 export const createProperty = createAsyncThunk(
   'properties/create',
-  async (propertyData: Partial<Property>, { getState, rejectWithValue }) => {
+  async (propertyData: Partial<Property>, { rejectWithValue }) => {
     try {
-      const state = getState() as { auth: { token: string | null } };
-      const token = state.auth.token;
-
-      if (!token) {
-        return rejectWithValue('No authentication token');
-      }
-
       const response = await fetch('/api/properties/', {
         method: 'POST',
         headers: {
@@ -163,15 +146,8 @@ export const createProperty = createAsyncThunk(
 
 export const updateProperty = createAsyncThunk(
   'properties/update',
-  async ({ id, data }: { id: string; data: Partial<Property> }, { getState, rejectWithValue }) => {
+  async ({ id, data }: { id: string; data: Partial<Property> }, { rejectWithValue }) => {
     try {
-      const state = getState() as { auth: { token: string | null } };
-      const token = state.auth.token;
-
-      if (!token) {
-        return rejectWithValue('No authentication token');
-      }
-
       const response = await fetch(`/api/properties/${id}/`, {
         method: 'PUT',
         headers: {
@@ -195,17 +171,14 @@ export const updateProperty = createAsyncThunk(
 
 export const deleteProperty = createAsyncThunk(
   'properties/delete',
-  async (id: string, { getState, rejectWithValue }) => {
+  async (id: string, { rejectWithValue }) => {
     try {
-      const state = getState() as { auth: { token: string | null } };
-      const token = state.auth.token;
-
-      if (!token) {
-        return rejectWithValue('No authentication token');
-      }
 
       const response = await fetch(`/api/properties/${id}/`, {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
       if (!response.ok) {

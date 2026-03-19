@@ -3,7 +3,7 @@ import { getDeveloperById } from '@/lib/api';
 import { DeveloperForm } from '@/components/dashboard/developer-form';
 
 interface EditDeveloperPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function EditDeveloperPage({ params }: EditDeveloperPageProps) {

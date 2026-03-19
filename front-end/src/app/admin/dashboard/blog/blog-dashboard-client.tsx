@@ -21,14 +21,16 @@ export function BlogDashboardClient({ filters }: BlogDashboardClientProps) {
   const [authors, setAuthors] = useState<Author[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
 
   const normalizedFilters = useMemo(
     () => ({
       page: filters.page,
       page_size: filters.pageSize,
       status: filters.status,
+      search: search || undefined,
     }),
-    [filters.page, filters.pageSize, filters.status]
+    [filters.page, filters.pageSize, filters.status, search]
   );
 
   useEffect(() => {
@@ -65,8 +67,19 @@ export function BlogDashboardClient({ filters }: BlogDashboardClientProps) {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle>All Posts ({count})</CardTitle>
+        <div className="flex items-center space-x-2">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search posts..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="flex h-9 w-64 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (

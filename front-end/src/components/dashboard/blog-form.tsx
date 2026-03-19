@@ -41,28 +41,9 @@ interface BlogFormProps {
   authors: Author[];
 }
 
-const extractMediaPath = (value: string | null | undefined): string => {
-  if (!value) return '';
-
-  try {
-    if (value.startsWith('http://') || value.startsWith('https://')) {
-      const parsed = new URL(value);
-      return parsed.pathname || '';
-    }
-  } catch (error) {
-    // Fall through and return normalized relative path
-  }
-
-  return value.startsWith('/') ? value : `/${value}`;
-};
-
 export function BlogForm({ post, authors }: BlogFormProps) {
-  const initialImagePath = useMemo(() => extractMediaPath(post?.image), [post?.image]);
-  const initialPreview = useMemo(() => (post?.image ? getImageUrl(post.image) : null), [post?.image]);
-
   const [isLoading, setIsLoading] = useState(false);
-  const [imageUrl, setImageUrl] = useState(initialImagePath);
-  const [imagePreview, setImagePreview] = useState<string | null>(initialPreview);
+  const [imageUrl, setImageUrl] = useState(post?.image || '');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const router = useRouter();
@@ -95,7 +76,6 @@ export function BlogForm({ post, authors }: BlogFormProps) {
         const result = await uploadImage(imageFile, 'blog');
         finalImage = result.image;
         setImageUrl(finalImage);
-        setImagePreview(getImageUrl(finalImage));
         setImageFile(null);
       }
 
@@ -224,16 +204,12 @@ export function BlogForm({ post, authors }: BlogFormProps) {
           <CardContent>
             <ImageUpload
               autoUpload={false}
-              currentImage={imagePreview || undefined}
+              currentImage={imageUrl || undefined}
               type="blog"
-              onFileSelect={(file, previewUrl) => {
+              onFileSelect={(file) => {
                 setImageFile(file);
-                setImagePreview(previewUrl);
-                if (!file) {
+                if (!file && !post?.image) {
                   setImageUrl('');
-                }
-                if (!previewUrl) {
-                  setImagePreview(initialPreview);
                 }
               }}
             />

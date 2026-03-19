@@ -28,22 +28,19 @@ const initialState: DevelopersState = {
 // Async thunks
 export const fetchDevelopers = createAsyncThunk(
   'developers/fetchAll',
-  async (params: { page?: number; filters?: Partial<DevelopersState['filters']> } = {}, { getState, rejectWithValue }) => {
+  async (params: { page?: number; filters?: Partial<DevelopersState['filters']> } = {}, { rejectWithValue }) => {
     try {
-      const state = getState() as { auth: { token: string | null } };
-      const token = state.auth.token;
-
-      if (!token) {
-        return rejectWithValue('No authentication token');
-      }
-
       const { page = 1, filters = {} } = params;
       const queryParams = new URLSearchParams({
         page: page.toString(),
         ...Object.fromEntries(Object.entries(filters).filter(([_, value]) => value !== null && value !== '')),
       });
 
-      const response = await fetch(`/api/developers/?${queryParams}`);
+      const response = await fetch(`/api/developers/?${queryParams}`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!response.ok) {
         return rejectWithValue('Failed to fetch developers');
@@ -59,16 +56,13 @@ export const fetchDevelopers = createAsyncThunk(
 
 export const fetchDeveloper = createAsyncThunk(
   'developers/fetchOne',
-  async (id: string, { getState, rejectWithValue }) => {
+  async (id: string, { rejectWithValue }) => {
     try {
-      const state = getState() as { auth: { token: string | null } };
-      const token = state.auth.token;
-
-      if (!token) {
-        return rejectWithValue('No authentication token');
-      }
-
-      const response = await fetch(`/api/developers/${id}/`);
+      const response = await fetch(`/api/developers/${id}/`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!response.ok) {
         return rejectWithValue('Failed to fetch developer');
@@ -84,15 +78,8 @@ export const fetchDeveloper = createAsyncThunk(
 
 export const createDeveloper = createAsyncThunk(
   'developers/create',
-  async (developerData: Partial<Developer>, { getState, rejectWithValue }) => {
+  async (developerData: Partial<Developer>, { rejectWithValue }) => {
     try {
-      const state = getState() as { auth: { token: string | null } };
-      const token = state.auth.token;
-
-      if (!token) {
-        return rejectWithValue('No authentication token');
-      }
-
       const response = await fetch('/api/developers/', {
         method: 'POST',
         headers: {
@@ -116,15 +103,8 @@ export const createDeveloper = createAsyncThunk(
 
 export const updateDeveloper = createAsyncThunk(
   'developers/update',
-  async ({ id, data }: { id: string; data: Partial<Developer> }, { getState, rejectWithValue }) => {
+  async ({ id, data }: { id: string; data: Partial<Developer> }, { rejectWithValue }) => {
     try {
-      const state = getState() as { auth: { token: string | null } };
-      const token = state.auth.token;
-
-      if (!token) {
-        return rejectWithValue('No authentication token');
-      }
-
       const response = await fetch(`/api/developers/${id}/`, {
         method: 'PUT',
         headers: {
@@ -148,15 +128,8 @@ export const updateDeveloper = createAsyncThunk(
 
 export const deleteDeveloper = createAsyncThunk(
   'developers/delete',
-  async (id: string, { getState, rejectWithValue }) => {
+  async (id: string, { rejectWithValue }) => {
     try {
-      const state = getState() as { auth: { token: string | null } };
-      const token = state.auth.token;
-
-      if (!token) {
-        return rejectWithValue('No authentication token');
-      }
-
       const response = await fetch(`/api/developers/${id}/`, {
         method: 'DELETE',
       });
