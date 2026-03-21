@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { 
   Plus, 
   Edit, 
@@ -106,10 +107,11 @@ const getActivityText = (type: ActivityItem['type'], entity: ActivityItem['entit
 export function ActivityFeed() {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Recent Activity</CardTitle>
-        <CardDescription>
-          Latest changes and updates across the platform
+      <CardHeader className="pb-4">
+        <span className="text-secondary text-xs font-bold uppercase tracking-widest">Platform Pulse</span>
+        <CardTitle className="text-2xl font-display mt-1">Recent Activity</CardTitle>
+        <CardDescription className="text-muted-foreground/80">
+          Latest changes and heartbeat of the Digital Curator.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -120,21 +122,21 @@ export function ActivityFeed() {
             const actionText = getActivityText(activity.type, activity.entity);
 
             return (
-              <div key={activity.id} className="flex items-start space-x-3">
-                <div className={`flex-shrink-0 p-2 rounded-full ${colorClass}`}>
+              <div key={activity.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-surface-low transition-colors">
+                <div className={cn("flex-shrink-0 p-2 rounded-xl bg-primary/5 text-primary")}>
                   <Icon className="h-4 w-4" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-display text-foreground truncate">
                       {activity.name}
                     </p>
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-tighter border-primary/20 text-primary">
                       {activity.entity}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-500">
-                    {actionText} by {activity.user} • {activity.timestamp}
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {actionText} by <span className="text-foreground font-medium">{activity.user}</span> • {activity.timestamp}
                   </p>
                 </div>
               </div>

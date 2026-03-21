@@ -17,10 +17,11 @@ interface QuickActionsProps {
 export function QuickActions({ actions }: QuickActionsProps) {
   return (
     <Card className="bg-card text-card-foreground">
-      <CardHeader>
-        <CardTitle>Quick Actions</CardTitle>
-        <CardDescription>
-          Common tasks and shortcuts
+      <CardHeader className="pb-4">
+        <span className="text-secondary text-xs font-bold uppercase tracking-widest">Management</span>
+        <CardTitle className="text-2xl font-display mt-1">Quick Actions</CardTitle>
+        <CardDescription className="text-muted-foreground/80">
+          Common shortcuts for curators.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">

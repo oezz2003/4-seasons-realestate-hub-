@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 import {
   Home,
   Building2,
@@ -28,13 +29,21 @@ export function Sidebar() {
 
   return (
     <div className="flex flex-col h-full bg-card border-r border-border transition-colors duration-200">
-      {/* Logo */}
-      <div className="flex items-center h-16 px-4 border-b border-border">
-        <div className="flex items-center">
-          <Building2 className="h-8 w-8 text-primary" />
-          <span className="ml-2 text-xl font-bold text-foreground">
-            Real Estate Hub
-          </span>
+      {/* Logo Section */}
+      <div className="flex flex-col items-center justify-center py-10 px-4 border-b border-border/10 bg-surface-low/30">
+        <div className="relative h-14 w-full">
+           <Image 
+              src="/4SEASONSLOGO.png" 
+              alt="4 Seasons Logo" 
+              fill 
+              className="object-contain" 
+              priority
+           />
+        </div>
+        <div className="mt-4 text-center">
+           <p className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground/40">
+              Administrative Suite
+           </p>
         </div>
       </div>
 

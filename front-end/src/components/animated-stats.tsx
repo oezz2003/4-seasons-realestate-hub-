@@ -75,61 +75,44 @@ export function AnimatedStats({ stats }: AnimatedStatsProps) {
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // When the component comes into view, set isVisible to true
         if (entry.isIntersecting) {
           setIsVisible(true);
-          observer.disconnect(); // Stop observing once it's visible to animate only once
+          observer.disconnect();
         }
       },
-      {
-        threshold: 0.3, // Trigger when 30% of the component is visible
-      }
+      { threshold: 0.3 }
     );
 
     const currentRef = sectionRef.current;
-    if (currentRef) {
-      observer.observe(currentRef);
-    }
-
+    if (currentRef) observer.observe(currentRef);
     return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
-      }
+      if (currentRef) observer.unobserve(currentRef);
     };
   }, []);
 
-  // Use real stats if available, otherwise fallback to mock data
-  const displayStats = stats ? [
-    { icon: Building, value: stats.properties, label: "Properties Available", suffix: "+" },
-    { icon: Award, value: stats.compounds, label: "Compounds", suffix: "+" },
-    { icon: Users, value: stats.developers, label: "Developers", suffix: "+" },
-    { icon: Smile, value: stats.clients, label: "Happy Clients", suffix: "+" },
-  ] : statsData;
+  const displayStats = [
+    { value: stats?.properties || 1200, label: "Properties Listed", suffix: "+", color: "text-primary" },
+    { value: stats?.compounds || 45, label: "Premium Compounds", suffix: "", color: "text-secondary" },
+    { value: stats?.developers || 850, label: "Happy Clients", suffix: "+", color: "text-tertiary" },
+    { value: 4, label: "Portfolio Value", suffix: "B+", color: "text-on-surface" },
+  ];
 
   return (
-    <section ref={sectionRef} className="py-12 md:py-20 bg-primary/10">
-      <div className="container mx-auto px-4">
-        <div className="overflow-hidden py-1 text-center">
-          <h2 className="text-3xl font-bold mb-10 font-headline animate-title-reveal">Our Journey in Numbers</h2>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-          {displayStats.map((stat) => {
-            const Icon = stat.icon;
-            return (
-              <div 
-                key={stat.label} 
-                className="group p-6"
-              >
-                <div className="relative inline-block mb-3 transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-2">
-                    <Icon className="w-12 h-12 text-primary" />
-                </div>
-                {/* Always render AnimatedNumber, but control its animation with the `startAnimation` prop */}
-                <AnimatedNumber value={stat.value} suffix={stat.suffix} startAnimation={isVisible} />
-                <p className="text-muted-foreground">{stat.label}</p>
-              </div>
-            );
-          })}
-        </div>
+    <section ref={sectionRef} className="py-24 max-w-7xl mx-auto px-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        {displayStats.map((stat, idx) => (
+          <div 
+            key={idx} 
+            className="text-center p-8 rounded-2xl bg-surface-container-low transition-all hover:scale-[1.05] duration-500"
+          >
+            <div className={`text-4xl md:text-5xl font-headline font-black mb-2 ${stat.color}`}>
+              <AnimatedNumber value={stat.value} suffix={stat.suffix} startAnimation={isVisible} />
+            </div>
+            <div className="font-label text-[10px] uppercase tracking-widest text-muted-foreground/60 font-black">
+              {stat.label}
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );

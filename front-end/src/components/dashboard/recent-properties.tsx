@@ -14,10 +14,11 @@ interface RecentPropertiesProps {
 export function RecentProperties({ properties }: RecentPropertiesProps) {
   return (
     <Card className="bg-card text-card-foreground">
-      <CardHeader>
-        <CardTitle>Recent Properties</CardTitle>
-        <CardDescription>
-          Latest property listings added to the platform
+      <CardHeader className="pb-4">
+        <span className="text-secondary text-xs font-bold uppercase tracking-widest">Update Stream</span>
+        <CardTitle className="text-2xl font-display mt-1">Recent Properties</CardTitle>
+        <CardDescription className="text-muted-foreground/80">
+          Latest additions to the Digital Curator collection.
         </CardDescription>
       </CardHeader>
       <CardContent>

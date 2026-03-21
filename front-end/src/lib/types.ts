@@ -56,6 +56,16 @@ export interface Developer {
   projects_count: number;
 }
 
+export interface LuxuryDeveloper extends Developer {
+  main_image?: string;
+  representative_image?: string | null;
+  tier?: 'GLOBAL TIER' | 'URBAN FOCUS' | 'MARKET LEADER' | 'EMERGING FORCE';
+  rating?: number;
+  experience?: string;
+  active_projects?: string;
+  category?: 'Residential' | 'Commercial' | 'Coastal' | 'Mixed-Use';
+}
+
 export interface Compound {
   id: number;
   name: string;

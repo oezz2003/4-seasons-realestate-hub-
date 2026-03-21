@@ -8,61 +8,53 @@ body {
 
 @layer base {
   :root {
-    --background: 48 96% 96%;
-    --foreground: 20 14% 4%;
-    --card: 48 96% 98%;
-    --card-foreground: 20 14% 4%;
-    --popover: 48 96% 98%;
-    --popover-foreground: 20 14% 4%;
-    --primary: 142 76% 36%;
-    --primary-foreground: 36 100% 98%;
-    --secondary: 36 44% 95%;
-    --secondary-foreground: 20 14% 4%;
-    --muted: 36 44% 95%;
-    --muted-foreground: 20 8% 40%;
-    --accent: 25 95% 53%;
-    --accent-foreground: 36 100% 98%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 36 33% 88%;
-    --input: 36 33% 88%;
-    --ring: 142 71% 45%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-
-    /* Preloader Season Colors */
-    --preloader-winter: hsl(205 90% 78%);
-    --preloader-autumn: hsl(25 95% 70%);
-    --preloader-spring: hsl(130 60% 80%);
-    --preloader-summer: hsl(45 100% 75%);
+    --background: 228 10% 97%; /* #f6f6f9 */
+    --foreground: 210 4% 19%; /* #2d2f31 */
+    --card: 0 0% 100%;
+    --card-foreground: 210 4% 19%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 4% 19%;
+    --primary: 195 100% 26%; /* #006383 */
+    --primary-foreground: 195 100% 95%; /* #e6f5ff */
+    --primary-container: 199 88% 72%; /* #7bcbf3 */
+    --secondary: 20 100% 32%; /* #a33700 */
+    --secondary-foreground: 20 100% 96%; /* #ffefeb */
+    --surface-container-low: 240 9% 95%; /* #f0f0f3 */
+    --surface-container-lowest: 0 0% 100%; /* #ffffff */
+    --muted: 210 4% 96%;
+    --muted-foreground: 210 3% 36%;
+    --accent: 20 100% 32%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 356 74% 41%; /* #b31b25 */
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 2% 84%; /* #acadaf 30% approx */
+    --input: 210 2% 84%;
+    --ring: 195 100% 26%;
+    --radius: 0.75rem;
   }
   .dark {
-    --background: 220 10% 10%;
-    --foreground: 220 10% 95%;
-    --card: 220 10% 15%;
-    --card-foreground: 220 10% 95%;
-    --popover: 220 10% 15%;
-    --popover-foreground: 220 10% 95%;
-    --primary: 142 66% 46%;
-    --primary-foreground: 36 100% 98%;
-    --secondary: 220 10% 20%;
-    --secondary-foreground: 220 10% 95%;
-    --muted: 220 10% 20%;
-    --muted-foreground: 220 10% 60%;
-    --accent: 25 85% 63%;
-    --accent-foreground: 25 85% 10%;
-    --destructive: 0 62.8% 30.6%;
+    --background: 210 10% 8%;
+    --foreground: 210 10% 96%;
+    --card: 210 10% 12%;
+    --card-foreground: 210 10% 96%;
+    --popover: 210 10% 12%;
+    --popover-foreground: 210 10% 96%;
+    --primary: 198 60% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 21 100% 55%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 10% 16%;
+    --muted-foreground: 210 8% 65%;
+    --accent: 88 50% 60%;
+    --accent-foreground: 210 10% 8%;
+    --destructive: 0 62.8% 50.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 220 10% 25%;
-    --input: 220 10% 25%;
-    --ring: 142 71% 45%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
+    --border: 210 10% 20%;
+    --input: 210 10% 20%;
+    --ring: 198 60% 55%;
+    --chart-1: 198 60% 55%;
+    --chart-2: 21 100% 55%;
+    --chart-3: 88 50% 60%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
 
@@ -75,10 +67,54 @@ body {
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.glass-nav {
+  @apply bg-background/70 backdrop-blur-2xl border-b border-border/10;
+}
+
+.glass-premium {
+  @apply bg-surface-lowest/40 backdrop-blur-3xl border border-white/10;
+}
+
+.ghost-border {
+  @apply border border-border/10;
+}
+
+.gradient-primary {
+  @apply bg-gradient-to-br from-primary to-primary-container;
+}
+
+.gradient-gold {
+  @apply bg-gradient-to-br from-secondary to-secondary/80;
+}
+
+/* No-Line Utilities */
+.section-blend {
+  @apply bg-surface-low border-none;
+}
+
+.card-premium {
+  @apply bg-surface-lowest shadow-[0_20px_40px_rgba(18,28,42,0.06)] border-none rounded-xl transition-transform hover:scale-[1.02];
+}
+
+.text-editorial-title {
+  @apply font-display text-4xl md:text-6xl tracking-tight leading-tight font-extrabold;
+}
+
+.text-editorial-label {
+  @apply font-label text-xs uppercase tracking-widest text-primary font-bold;
+}
+
+.editorial-shadow {
+  box-shadow: 0 20px 50px rgba(0, 99, 131, 0.06);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }

@@ -1,25 +1,19 @@
 import { cn } from "@/lib/utils";
 import React from "react";
 
-export function Logo({ className, ...props }: React.SVGProps<SVGSVGElement>) {
+import NextImage from "next/image";
+
+export function Logo({ className }: { className?: string }) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={cn("w-6 h-6", className)}
-      {...props}
-    >
-      <path d="M2 22v-2a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v2" />
-      <path d="M12 2a4 4 0 0 0-4 4v10.5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V6a4 4 0 0 0-4-4Z" />
-      <path d="M12 18V6" />
-      <path d="M12 6H8.5a2.5 2.5 0 1 0 0 5H12" />
-      <path d="M12 11h3.5a2.5 2.5 0 1 1 0 5H12" />
-    </svg>
+    <div className={cn("relative aspect-square", className)}>
+      <NextImage
+        src="/4SEASONSLOGO.png"
+        alt="4 Seasons Hub"
+        fill
+        className="object-contain"
+        priority
+      />
+    </div>
   );
 }
 

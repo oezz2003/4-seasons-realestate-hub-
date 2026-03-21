@@ -37,10 +37,18 @@ export async function GET(request: Request) {
         ]);
 
         const formattedDevelopers = await Promise.all(developers.map(async (d: any) => {
-            const projectsCount = await prisma.compound.count({ where: { developerId: d.id } });
+            const [projectsCount, representativeCompound] = await Promise.all([
+                prisma.compound.count({ where: { developerId: d.id } }),
+                prisma.compound.findFirst({
+                    where: { developerId: d.id },
+                    select: { mainImage: true }
+                })
+            ]);
+
             return {
                 ...d,
-                projects_count: projectsCount
+                projects_count: projectsCount,
+                representative_image: representativeCompound?.mainImage || null
             };
         }));
 

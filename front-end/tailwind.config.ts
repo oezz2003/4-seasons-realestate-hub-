@@ -10,8 +10,10 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['"Manrope"', 'sans-serif'],
+        body: ['"Plus Jakarta Sans"', 'sans-serif'],
         headline: ['"Manrope"', 'sans-serif'],
+        display: ['"Manrope"', 'sans-serif'],
+        label: ['"Plus Jakarta Sans"', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
@@ -26,12 +28,36 @@ export default {
           foreground: 'hsl(var(--popover-foreground))',
         },
         primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
+          DEFAULT: '#006383',
+          foreground: '#e6f5ff',
+          container: '#7bcbf3',
+          dim: '#005673',
+          fixed: '#7bcbf3',
         },
         secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))',
+          DEFAULT: '#a33700',
+          foreground: '#ffefeb',
+          container: '#ffc4b0',
+          dim: '#8f2f00',
+        },
+        tertiary: {
+          DEFAULT: '#3c6600',
+          foreground: '#d9ffab',
+          container: '#c1fd7c',
+          dim: '#345900',
+        },
+        surface: {
+          DEFAULT: '#f6f6f9',
+          dim: '#d2d4d8',
+          bright: '#f6f6f9',
+          low: '#f0f0f3',
+          lowest: '#ffffff',
+          container: {
+            DEFAULT: '#e7e8eb',
+            low: '#f0f0f3',
+            high: '#e1e2e6',
+            highest: '#dbdde0',
+          }
         },
         muted: {
           DEFAULT: 'hsl(var(--muted))',

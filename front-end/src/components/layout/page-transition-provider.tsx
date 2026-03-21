@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { Preloader } from './preloader';
 import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function PageTransitionProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -12,9 +13,10 @@ export function PageTransitionProvider({ children }: { children: React.ReactNode
 
   // This state now specifically handles the very first load of the website
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  
   useEffect(() => {
-    // This timer simulates the initial preloader duration
-    const timer = setTimeout(() => setIsInitialLoad(false), 2200); 
+    // Initial load: 3 seconds to allow for full Branding and Sweep
+    const timer = setTimeout(() => setIsInitialLoad(false), 3000); 
     return () => clearTimeout(timer);
   }, []);
 
@@ -27,11 +29,12 @@ export function PageTransitionProvider({ children }: { children: React.ReactNode
 
     setIsTransitioning(true);
     
-    // This timer simulates the transition duration between pages
+    // Page transition: 1.5 seconds. 
+    // This allows for: Slide-in (0.8s), Logo reveal, and start of Slide-out
     const timer = setTimeout(() => {
       setIsTransitioning(false);
       previousPath.current = pathname;
-    }, 1600); // Duration of the preloader for page changes
+    }, 1500); 
 
     return () => clearTimeout(timer);
   }, [pathname, isInitialLoad]);
@@ -48,24 +51,31 @@ export function PageTransitionProvider({ children }: { children: React.ReactNode
       <Preloader isLoading={showPreloader} />
       <main
         className={cn(
-          'flex-1',
+          'flex-1 flex flex-col min-h-screen',
           // Add bottom padding on mobile to account for the bottom nav bar.
           'pb-24 md:pb-0',
           // Add top padding to account for the sticky header's height, except on homepage.
-          isHomePage ? '' : HEADER_HEIGHT_CLASS_TOP,
-          // Apply transition styles to the main container
-          'transition-opacity duration-500 ease-in-out'
+          isHomePage ? '' : HEADER_HEIGHT_CLASS_TOP
         )}
-        style={{
-          // Set opacity to 0 when preloader is active, and fade it in when not.
-          opacity: showPreloader ? 0 : 1,
-          // Delay the fade-in to happen after the preloader animation
-          transitionDelay: showPreloader ? '0ms' : '900ms',
-        }}
       >
-        <div key={pathname}>
-          {children}
-        </div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ 
+              opacity: showPreloader ? 0 : 1, 
+              x: showPreloader ? 50 : 0 
+            }}
+            transition={{ 
+              duration: 1, 
+              delay: showPreloader ? 0 : 0.6,
+              ease: [0.22, 1, 0.36, 1] 
+            }}
+            className="flex-1 flex flex-col"
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
       </main>
     </>
   );

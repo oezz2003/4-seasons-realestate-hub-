@@ -96,10 +96,11 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Welcome back! Here's what's happening with your real estate platform.
+      <div className="flex flex-col gap-2">
+        <span className="text-editorial-label">Administrative Control Center</span>
+        <h1 className="text-editorial-title text-foreground">Dashboard</h1>
+        <p className="mt-2 text-muted-foreground max-w-2xl">
+          Welcome back to the Digital Curator. Monitor your platform&apos;s exclusivity, property performance, and market insights from this central hub.
         </p>
       </div>
 

@@ -2,13 +2,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { BedDouble, Bath, AreaChart, MapPin, CheckCircle, Star, Rocket } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { BedDouble, Bath, AreaChart, MapPin, CheckCircle, Star, Rocket, Info, ShieldCheck, Zap } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { WhatsappIcon } from '@/components/icons';
 import { PropertyCard } from '@/components/property-card';
 import { PropertyImageGallery } from '@/components/property-image-gallery';
+import { ExperienceThePalette } from '@/components/experience-the-palette';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { notFound } from 'next/navigation';
 import { getPropertyById, getProperties } from '@/lib/api';
 import { getImageUrl, getPlaceholderImage, getLocationName, getDeveloperName, getCompoundName } from '@/lib/image-helpers';
@@ -21,7 +22,6 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
     notFound();
   }
 
-  // Fetch suggested properties (same location or developer)
   const suggestedPropertiesData = await getProperties({
     location: property.location?.slug,
     page_size: 3,
@@ -32,187 +32,168 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
   const whatsappMessage = `Hello, I'm interested in the property "${property.title}" located at ${getLocationName(property.location)}. Could you please provide more information?`;
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappMessage)}`;
 
-  // Prepare gallery images
   const galleryImages = [
     getImageUrl(property.main_image, getPlaceholderImage('property')),
     ...property.gallery_images.map(img => getImageUrl(img.image, getPlaceholderImage('property')))
   ];
 
   return (
-    <div className="container mx-auto py-12 px-4 md:py-20 animate-fade-in">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-        {/* Left Column: Images and Map */}
-        <div className="lg:col-span-2 animate-fade-in-up">
-          <div className="mb-8">
-            <PropertyImageGallery 
-              images={galleryImages} 
-              imageHints={galleryImages.map(() => 'property image')} 
-              title={property.title} 
-            />
-          </div>
+    <div className="bg-background min-h-screen">
+      {/* Header Gallery Section */}
+      <section className="pt-24 md:pt-32 px-4 md:px-8 max-w-[1600px] mx-auto">
+        <PropertyImageGallery images={galleryImages} title={property.title} />
+      </section>
+
+      {/* Narrative & Sidebar Content */}
+      <section className="py-24 max-w-7xl mx-auto px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
           
-          <Accordion type="single" collapsible defaultValue="description" className="w-full">
-            <AccordionItem value="description">
-              <AccordionTrigger className="text-2xl font-bold font-headline">Description</AccordionTrigger>
-              <AccordionContent className="text-muted-foreground text-base pt-2">
-                <div 
-                  className="prose max-w-none"
-                  dangerouslySetInnerHTML={{ __html: property.description }}
-                />
-              </AccordionContent>
-            </AccordionItem>
+          {/* Left Column: Narrative & Amenities */}
+          <div className="lg:col-span-8 space-y-24">
             
-            {property.floor_plan_image && (
-              <AccordionItem value="floor-plan">
-                <AccordionTrigger className="text-2xl font-bold font-headline">Floor Plan</AccordionTrigger>
-                <AccordionContent>
-                  <div className="relative w-full h-96 mt-4">
-                    <Image 
-                      src={getImageUrl(property.floor_plan_image)} 
-                      alt="Floor Plan" 
-                      fill 
-                      className="object-contain rounded-md" 
-                    />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            )}
-            
-            {property.map_image && (
-              <AccordionItem value="map">
-                <AccordionTrigger className="text-2xl font-bold font-headline">Location</AccordionTrigger>
-                <AccordionContent>
-                  <div className="relative w-full h-80 mt-4 rounded-md overflow-hidden">
-                    <Image 
-                      src={getImageUrl(property.map_image)} 
-                      alt="Location map" 
-                      fill 
-                      className="object-cover" 
-                    />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            )}
-          </Accordion>
-        </div>
-
-        {/* Right Column: Details and Contact */}
-        <div className="lg:col-span-1 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-          <Card className="sticky top-28 shadow-lg">
-            <CardHeader>
-              <div className="flex items-center gap-2 mb-2">
-                <Badge variant="secondary">{property.property_type}</Badge>
-                {property.is_featured && (
-                  <Badge variant="secondary" className="bg-yellow-500 text-white">
-                    <Star className="h-3 w-3 mr-1" />
-                    Featured
-                  </Badge>
-                )}
-                {property.is_new_launch && (
-                  <Badge variant="default" className="bg-blue-500 text-white">
-                    <Rocket className="h-3 w-3 mr-1" />
-                    New Launch
-                  </Badge>
-                )}
+            {/* Architectural Narrative */}
+            <div>
+              <span className="text-secondary font-black tracking-[0.4em] uppercase text-[10px] mb-8 block">Architectural Narrative</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                 <h2 className="font-headline text-5xl font-black tracking-tighter leading-[0.9]">
+                   Where raw tectonic power meets the <i className="font-medium text-emerald-800">serenity of the sky.</i>
+                 </h2>
+                 <div 
+                    className="font-body text-muted-foreground/90 text-lg leading-relaxed space-y-6"
+                    dangerouslySetInnerHTML={{ __html: property.description }}
+                 />
               </div>
-              
-              <div className="overflow-hidden py-1">
-                <CardTitle className="text-3xl font-bold font-headline animate-title-reveal">{property.title}</CardTitle>
-              </div>
-              <p className="text-muted-foreground flex items-center gap-2 pt-1">
-                <MapPin className="w-4 h-4"/> {getLocationName(property.location)}
-              </p>
-            </CardHeader>
-            
-            <CardContent>
-              <p className="text-4xl font-bold text-primary mb-6">EGP {parseFloat(property.price).toLocaleString()}</p>
-              
-              <div className="grid grid-cols-3 gap-4 text-center mb-6">
-                <div className="bg-primary/10 p-3 rounded-lg">
-                  <BedDouble className="w-6 h-6 mx-auto text-primary mb-1" />
-                  <p className="font-semibold">{property.bedrooms}</p>
-                  <p className="text-xs text-muted-foreground">Beds</p>
-                </div>
-                <div className="bg-primary/10 p-3 rounded-lg">
-                  <Bath className="w-6 h-6 mx-auto text-primary mb-1" />
-                  <p className="font-semibold">{property.bathrooms}</p>
-                  <p className="text-xs text-muted-foreground">Baths</p>
-                </div>
-                <div className="bg-primary/10 p-3 rounded-lg">
-                  <AreaChart className="w-6 h-6 mx-auto text-primary mb-1" />
-                  <p className="font-semibold">{property.area} m²</p>
-                  <p className="text-xs text-muted-foreground">Area</p>
-                </div>
-              </div>
+            </div>
 
-              <Separator className="my-6" />
+            {/* Amenities Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+               {[
+                 { label: 'Bedrooms', value: property.bedrooms, icon: BedDouble },
+                 { label: 'Bathrooms', value: property.bathrooms, icon: Bath },
+                 { label: 'Private Pool', value: 'Private', icon: Zap },
+                 { label: 'Smart Automation', value: 'Smart', icon: Rocket }
+               ].map((item, idx) => (
+                 <div key={idx} className="bg-surface-container-low rounded-[2rem] p-8 text-center border border-white/50 group hover:bg-white hover:shadow-xl transition-all duration-500">
+                    <item.icon className="w-8 h-8 mx-auto mb-6 text-primary group-hover:scale-110 transition-transform" />
+                    <p className="font-headline text-2xl font-black mb-1">{item.value}</p>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">{item.label}</p>
+                 </div>
+               ))}
+            </div>
 
-              {/* Compound and Developer Info */}
-              {(property.compound || property.developer) && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-3 font-headline">Project Details</h3>
-                  {property.compound && (
-                    <div className="mb-2">
-                      <p className="text-sm text-muted-foreground">Compound</p>
-                      <Link 
-                        href={`/compounds/${property.compound.id}`}
-                        className="text-primary hover:underline font-medium"
-                      >
-                        {getCompoundName(property.compound)}
-                      </Link>
+            {/* Map Placeholder Context */}
+            <div className="space-y-8">
+               <div className="flex justify-between items-end">
+                 <h3 className="font-headline text-3xl font-black tracking-tighter">Location Context</h3>
+                 <span className="text-primary font-black uppercase tracking-widest text-[9px]">{getLocationName(property.location)}, District 5</span>
+               </div>
+               <div className="aspect-video w-full rounded-[3rem] overflow-hidden bg-slate-200 relative grayscale hover:grayscale-0 transition-all duration-1000">
+                  <Image 
+                    src={property.map_image ? getImageUrl(property.map_image) : "https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&q=80&w=2000"} 
+                    alt="Map" 
+                    fill 
+                    className="object-cover opacity-80"
+                  />
+                  <div className="absolute inset-0 bg-primary/5 pointer-events-none" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                    <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center shadow-2xl animate-pulse">
+                      <MapPin className="text-white w-6 h-6" />
                     </div>
-                  )}
-                  {property.developer && (
-                    <div>
-                      <p className="text-sm text-muted-foreground">Developer</p>
-                      <Link 
-                        href={`/developers/${property.developer.id}`}
-                        className="text-primary hover:underline font-medium"
-                      >
-                        {getDeveloperName(property.developer)}
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <Separator className="my-6" />
-
-              {/* Amenities */}
-              {property.amenities && property.amenities.length > 0 && (
-                <>
-                  <h3 className="text-lg font-semibold mb-4 font-headline">Amenities</h3>
-                  <ul className="space-y-2 text-muted-foreground">
-                    {property.amenities.map((amenity) => (
-                      <li key={amenity.id} className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        <span>{amenity.name}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Separator className="my-6" />
-                </>
-              )}
-
-              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full">
-                <Button size="lg" className="w-full bg-green-500 hover:bg-green-600 text-white">
-                  <WhatsappIcon className="mr-2 h-5 w-5"/> Inquire via WhatsApp
-                </Button>
-              </a>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-      
-      <Separator className="my-12 md:my-20" />
-
-      {/* Suggested Properties */}
-      {suggestedProperties.length > 0 && (
-        <section className="animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-          <div className="overflow-hidden py-1 text-center">
-            <h2 className="text-3xl font-bold mb-10 font-headline animate-title-reveal">You Might Also Like</h2>
+                  </div>
+               </div>
+            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+          {/* Right Column: Listing Card Sidebar */}
+          <div className="lg:col-span-4">
+            <div className="sticky top-32 space-y-6">
+              <Card className="rounded-[3rem] bg-[#F2F2F2] border-none p-10 space-y-10 shadow-[0_40px_80px_rgba(0,0,0,0.06)]">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">Listing Price</p>
+                    <p className="font-headline text-5xl font-black tracking-tight text-primary">
+                      {parseInt(property.price) / 1000000}M <span className="text-xl">EGP</span>
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">Footprint</p>
+                    <p className="font-headline text-3xl font-black tracking-tight">{property.area}sqm</p>
+                  </div>
+                </div>
+
+                <ul className="space-y-5">
+                  {[
+                    'Fully furnished with bespoke Italian imports',
+                    'Energy-neutral solar glass facade',
+                    'Exclusive 24/7 Season Concierge access'
+                  ].map((feature, i) => (
+                    <li key={i} className="flex items-center gap-4 text-xs font-body font-medium text-on-surface/80">
+                      <div className="bg-primary/10 rounded-full p-1.5">
+                        <CheckCircle className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="space-y-4">
+                  <Button className="w-full h-16 rounded-2xl bg-primary text-on-primary font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+                    Schedule a Private Tour
+                  </Button>
+                  <Button variant="outline" className="w-full h-16 rounded-2xl border-primary/20 bg-white/50 text-primary font-black uppercase tracking-widest text-[10px] hover:bg-white transition-all">
+                    Download Brochure
+                  </Button>
+                </div>
+
+                <div className="pt-6 border-t border-black/5 flex items-center gap-5">
+                  <Avatar className="h-14 w-14">
+                    <AvatarImage src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=200" />
+                    <AvatarFallback>AV</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="font-headline text-sm font-black tracking-tight">Alexander Vance</p>
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Managing Partner • Elite Assets</p>
+                  </div>
+                  <Button variant="ghost" size="icon" className="rounded-full bg-black/5">
+                    <Info className="w-5 h-5 text-primary" />
+                  </Button>
+                </div>
+              </Card>
+
+              {/* Trust Badges */}
+              <div className="flex gap-4 px-4 overflow-x-auto pb-4 no-scrollbar">
+                <Badge variant="outline" className="rounded-full px-5 py-2 whitespace-nowrap bg-white/50 border-white font-black uppercase tracking-widest text-[8px] flex items-center gap-2">
+                  <ShieldCheck className="w-3 h-3 text-secondary" />
+                  Verified Listing
+                </Badge>
+                <Badge variant="outline" className="rounded-full px-5 py-2 whitespace-nowrap bg-white/50 border-white font-black uppercase tracking-widest text-[8px] flex items-center gap-2">
+                   <Zap className="w-3 h-3 text-emerald-600" />
+                   New Launch
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Seasonal Palette Section */}
+      <ExperienceThePalette />
+      
+      {/* Relational Curation Section */}
+      {suggestedProperties.length > 0 && (
+        <section className="py-32 px-8 max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-8">
+            <div className="max-w-xl">
+              <span className="text-secondary font-black tracking-[0.4em] uppercase text-[10px] mb-4 block">Relational Curation</span>
+              <h2 className="font-headline text-5xl md:text-6xl font-black tracking-tighter leading-none">Related Enclaves</h2>
+            </div>
+            <Link href="/search">
+              <Button variant="outline" className="rounded-full border-primary/20 px-8 py-6 font-black uppercase tracking-widest text-[9px]">
+                Explore Entire Collection
+              </Button>
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {suggestedProperties.map((property) => (
               <PropertyCard
                 key={property.id}
