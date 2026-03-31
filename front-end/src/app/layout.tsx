@@ -11,6 +11,8 @@ import { ReduxProvider } from '@/components/providers/redux-provider';
 import { NextAuthProvider } from '@/components/providers/next-auth-provider';
 import { PublicLayoutWrapper } from '@/components/layout/public-layout-wrapper';
 
+import { WhatsAppButton } from '@/components/whats-app-button';
+
 export const metadata: Metadata = {
   title: 'Four Seasons Real Estate Hub',
   description: 'Your premier destination for finding the perfect property.',
@@ -52,6 +54,7 @@ export default function RootLayout({
                     {children}
                   </PublicLayoutWrapper>
                 </PageTransitionProvider>
+                <WhatsAppButton variant="floating" />
                 <Toaster />
               </ClickSpark>
             </ThemeProvider>

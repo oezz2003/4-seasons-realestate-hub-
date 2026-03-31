@@ -10,6 +10,7 @@ import { BedDouble, Bath, AreaChart, Star, Rocket, MapPin, Heart } from "lucide-
 import { cn } from "@/lib/utils";
 import { getImageUrl, getPlaceholderImage, formatPrice, getLocationName } from "@/lib/image-helpers";
 import { Property } from "@/lib/types";
+import { WhatsAppButton } from "./whats-app-button";
 
 interface PropertyCardProps {
   id: number;
@@ -66,6 +67,13 @@ export function PropertyCard(props: PropertyCardProps) {
             </Badge>
           ) : null}
         </div>
+
+        {/* WhatsApp Button */}
+        <WhatsAppButton
+          variant="icon"
+          message={`Hello, I'm interested in "${props.title}" in ${locationName}.`}
+          className="absolute top-4 right-16 z-20"
+        />
 
         {/* Save Toggle */}
         <button 

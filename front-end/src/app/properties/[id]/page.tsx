@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { BedDouble, Bath, AreaChart, MapPin, CheckCircle, Star, Rocket, Info, ShieldCheck, Zap } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { WhatsappIcon } from '@/components/icons';
+import { WhatsAppButton } from '@/components/whats-app-button';
 import { PropertyCard } from '@/components/property-card';
 import { PropertyImageGallery } from '@/components/property-image-gallery';
 import { ExperienceThePalette } from '@/components/experience-the-palette';
@@ -34,8 +35,10 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
 
   const galleryImages = [
     getImageUrl(property.main_image, getPlaceholderImage('property')),
-    ...property.gallery_images.map(img => getImageUrl(img.image, getPlaceholderImage('property')))
-  ];
+    ...property.gallery_images.map(img => getImageUrl(img.image, getPlaceholderImage('property'))),
+    property.floor_plan_image ? getImageUrl(property.floor_plan_image) : null,
+    property.map_image ? getImageUrl(property.map_image) : null,
+  ].filter((img): img is string => Boolean(img));
 
   return (
     <div className="bg-background min-h-screen">
@@ -140,6 +143,10 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
                   <Button className="w-full h-16 rounded-2xl bg-primary text-on-primary font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
                     Schedule a Private Tour
                   </Button>
+                  <WhatsAppButton 
+                    message={whatsappMessage} 
+                    className="w-full"
+                  />
                   <Button variant="outline" className="w-full h-16 rounded-2xl border-primary/20 bg-white/50 text-primary font-black uppercase tracking-widest text-[10px] hover:bg-white transition-all">
                     Download Brochure
                   </Button>

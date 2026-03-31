@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { Preloader } from './preloader';
+import { SeasonTransition } from '../transitions/SeasonTransition';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -39,8 +39,8 @@ export function PageTransitionProvider({ children }: { children: React.ReactNode
     return () => clearTimeout(timer);
   }, [pathname, isInitialLoad]);
 
-  // Determine if the preloader should be visible
-  const showPreloader = isInitialLoad || isTransitioning;
+  // Determine if the transition should be visible
+  const showTransition = isInitialLoad || isTransitioning;
 
   const HEADER_HEIGHT_PX = 80;
   const HEADER_HEIGHT_CLASS_TOP = `pt-[${HEADER_HEIGHT_PX}px]`;
@@ -48,7 +48,7 @@ export function PageTransitionProvider({ children }: { children: React.ReactNode
 
   return (
     <>
-      <Preloader isLoading={showPreloader} />
+      <SeasonTransition isLoading={showTransition} />
       <main
         className={cn(
           'flex-1 flex flex-col min-h-screen',
@@ -63,12 +63,12 @@ export function PageTransitionProvider({ children }: { children: React.ReactNode
             key={pathname}
             initial={{ opacity: 0, x: 50 }}
             animate={{ 
-              opacity: showPreloader ? 0 : 1, 
-              x: showPreloader ? 50 : 0 
+              opacity: showTransition ? 0 : 1, 
+              x: showTransition ? 50 : 0 
             }}
             transition={{ 
               duration: 1, 
-              delay: showPreloader ? 0 : 0.6,
+              delay: showTransition ? 0 : 0.6,
               ease: [0.22, 1, 0.36, 1] 
             }}
             className="flex-1 flex flex-col"
