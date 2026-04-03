@@ -1,4 +1,4 @@
-import { BlogPost, Author, Amenity, Location, Developer, Compound, Property, PropertyImage, Partner, Testimonial, ContactFormSubmission } from './types';
+import { BlogPost, Author, Amenity, Location, Developer, Compound, Property, PropertyImage, Partner, Testimonial, ContactFormSubmission, PageContent } from './types';
 
 const getBaseUrl = () => {
   if (typeof window !== 'undefined') return ''; // Browser uses relative path
@@ -790,5 +790,13 @@ export async function getPropertyImages(propertyId: string): Promise<PropertyIma
   } catch (error) {
     console.error('Error fetching property images:', error);
     return [];
+  }
+}
+export async function getPageContent(slug: string): Promise<PageContent | null> {
+  try {
+    return await genericFetch<PageContent>(`${API_BASE_URL}pages/${slug}/`);
+  } catch (error) {
+    console.error(`Error fetching page content for ${slug}:`, error);
+    return null;
   }
 }

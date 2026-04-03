@@ -2,14 +2,18 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Target, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getFeaturedProperties } from '@/lib/api';
+import { getFeaturedProperties, getPageContent } from '@/lib/api';
 import { getImageUrl, getPlaceholderImage } from '@/lib/image-helpers';
 
 export default async function AboutPage() {
-  const featuredProperties = await getFeaturedProperties();
-  const heroImage = featuredProperties.results.length > 0 
+  const [featuredProperties, cmsData] = await Promise.all([
+    getFeaturedProperties(),
+    getPageContent('about')
+  ]);
+
+  const heroImage = cmsData?.hero_image || (featuredProperties.results.length > 0 
     ? getImageUrl(featuredProperties.results[0].main_image)
-    : getPlaceholderImage('property');
+    : getPlaceholderImage('property'));
 
   return (
     <div className="flex flex-col">
@@ -17,7 +21,7 @@ export default async function AboutPage() {
       <section className="relative h-[60vh] min-h-[400px] w-full overflow-hidden">
         <Image
           src={heroImage}
-          alt="About 4 Seasons"
+          alt={cmsData?.title || "About 4 Seasons"}
           fill
           className="object-cover scale-105"
           priority
@@ -26,9 +30,11 @@ export default async function AboutPage() {
         <div className="relative z-10 flex h-full flex-col items-center justify-center text-center text-white p-4">
           <div className="max-w-4xl space-y-6">
             <span className="text-secondary text-xs font-bold uppercase tracking-[0.4em] mb-4 block animate-fade-in">Our Heritage</span>
-            <h1 className="text-4xl md:text-7xl font-display tracking-tight animate-fade-in-up">The Digital Curator</h1>
+            <h1 className="text-4xl md:text-7xl font-display tracking-tight animate-fade-in-up">
+              {cmsData?.title || "The Digital Curator"}
+            </h1>
             <p className="text-lg md:text-xl max-w-2xl mx-auto font-serif italic text-white/80 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-              Redefining the Egyptian property landscape through transparency, technology, and a commitment to the extraordinary.
+              {cmsData?.subtitle || "Redefining the Egyptian property landscape through transparency, technology, and a commitment to the extraordinary."}
             </p>
           </div>
         </div>
@@ -45,7 +51,7 @@ export default async function AboutPage() {
               <span className="text-secondary text-[10px] font-bold uppercase tracking-[0.3em] mb-4">Foundation</span>
               <h2 className="text-editorial-title text-4xl mb-6">Our Mission</h2>
               <p className="text-muted-foreground/90 font-serif leading-relaxed text-lg">
-                To simplify the property journey through absolute transparency and bespoke service. We empower our collective with the intelligence needed to curate their future with confidence.
+                {cmsData?.metadata?.mission || "To simplify the property journey through absolute transparency and bespoke service. We empower our collective with the intelligence needed to curate their future with confidence."}
               </p>
             </div>
             <div className="section-blend p-12 rounded-[3.5rem] bg-surface-low/30 backdrop-blur-xl border border-primary/5 flex flex-col items-center text-center animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
@@ -55,12 +61,24 @@ export default async function AboutPage() {
               <span className="text-secondary text-[10px] font-bold uppercase tracking-[0.3em] mb-4">Trajectory</span>
               <h2 className="text-editorial-title text-4xl mb-6">Our Vision</h2>
               <p className="text-muted-foreground/90 font-serif leading-relaxed text-lg">
-                To be the most prestigious real estate orchestrator in the region, recognized for our unwavering integrity and the creation of a world where everyone finds their sanctuary.
+                {cmsData?.metadata?.vision || "To be the most prestigious real estate orchestrator in the region, recognized for our unwavering integrity and the creation of a world where everyone finds their sanctuary."}
               </p>
             </div>
           </div>
         </div>
       </section>
+
+      {/* Content Section (Rich Text) */}
+      {cmsData?.content && (
+        <section className="py-24 bg-surface-lowest border-y border-primary/5">
+           <div className="container mx-auto px-4 max-w-4xl">
+              <div 
+                className="prose prose-lg dark:prose-invert max-w-none font-serif text-muted-foreground/90"
+                dangerouslySetInnerHTML={{ __html: cmsData.content }}
+              />
+           </div>
+        </section>
+      )}
       
        {/* CTA Section */}
       <section className="py-32 bg-surface-lowest relative overflow-hidden">

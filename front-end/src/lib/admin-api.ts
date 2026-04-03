@@ -8,7 +8,8 @@ import {
   Author,
   Partner,
   Testimonial,
-  ContactFormSubmission
+  ContactFormSubmission,
+  PageContent
 } from './types';
 
 const ADMIN_API_BASE_URL = (process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL || '/api/').replace(/\/$/, '') + '/';
@@ -319,6 +320,28 @@ export const testimonialsApi = {
   delete: async (id: number) => {
     return fetcher<void>(`testimonials/${id}/`, {
       method: 'DELETE',
+    });
+  },
+};
+
+// Pages Content API
+export const pagesApi = {
+  getAll: async () => {
+    return fetcher<ApiResponse<PageContent>>('pages/');
+  },
+  getBySlug: async (slug: string) => {
+    return fetcher<PageContent>(`pages/${slug}/`);
+  },
+  update: async (slug: string, data: Partial<PageContent>) => {
+    return fetcher<PageContent>(`pages/${slug}/`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+  create: async (data: Partial<PageContent>) => {
+    return fetcher<PageContent>('pages/', {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   },
 };

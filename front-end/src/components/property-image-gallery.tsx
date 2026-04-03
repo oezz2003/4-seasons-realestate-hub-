@@ -49,7 +49,7 @@ export function PropertyImageGallery({ images, title }: PropertyImageGalleryProp
           
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-              <button className="absolute bottom-12 right-12 bg-white/20 backdrop-blur-md text-white border border-white/20 rounded-full px-8 py-4 font-black uppercase tracking-widest text-[9px] hover:bg-white hover:text-primary transition-all shadow-2xl">
+              <button className="absolute bottom-12 right-12 bg-white/10 backdrop-blur-md text-white border border-white/20 rounded-full px-8 py-4 font-black uppercase tracking-widest text-[9px] hover:bg-white hover:text-primary transition-all shadow-2xl dark:bg-black/20 dark:hover:bg-primary dark:hover:text-white">
                  Show all {images.length} photos
               </button>
             </DialogTrigger>
@@ -60,7 +60,7 @@ export function PropertyImageGallery({ images, title }: PropertyImageGalleryProp
                     <DialogTitle className="font-headline text-3xl font-black tracking-tighter">The Full Collection</DialogTitle>
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{title}</p>
                   </DialogHeader>
-                  <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="rounded-full h-12 w-12 bg-white/5 hover:bg-white/10">
+                  <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="rounded-full h-12 w-12 bg-white/5 hover:bg-white/10 dark:bg-white/10">
                     <X className="w-6 h-6" />
                   </Button>
                 </div>
@@ -115,7 +115,7 @@ export function PropertyImageGallery({ images, title }: PropertyImageGalleryProp
               onClick={() => setIsOpen(true)}
               className="absolute inset-0 z-10 w-full h-full cursor-pointer flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity"
             >
-               <span className="bg-white text-primary rounded-full px-6 py-3 font-black uppercase tracking-widest text-[9px] shadow-2xl">
+               <span className="bg-card text-primary rounded-full px-6 py-3 font-black uppercase tracking-widest text-[9px] shadow-2xl">
                  Expand Gallery
                </span>
             </button>

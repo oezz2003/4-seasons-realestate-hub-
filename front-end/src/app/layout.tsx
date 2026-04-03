@@ -14,8 +14,37 @@ import { PublicLayoutWrapper } from '@/components/layout/public-layout-wrapper';
 import { WhatsAppButton } from '@/components/whats-app-button';
 
 export const metadata: Metadata = {
-  title: 'Four Seasons Real Estate Hub',
-  description: 'Your premier destination for finding the perfect property.',
+  title: {
+    default: '4 Seasons Real Estate Hub | Egypt Luxury Properties',
+    template: '%s | 4 Seasons Hub'
+  },
+  description: 'Egypt\'s premier destination for luxury real estate across Cairo, North Coast, and Gouna. Explore exclusive enclaves with the 4 Seasons Standard.',
+  keywords: ['egypt luxury real estate', 'north coast villas', 'el gouna chalets', 'cairo penthouses', '4 seasons hub'],
+  authors: [{ name: '4 Seasons Hub Team' }],
+  creator: '4 Seasons Hub',
+  publisher: '4 Seasons Hub',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    title: '4 Seasons Real Estate Hub | Egypt Luxury Properties',
+    description: 'Egypt\'s premier destination for luxury real estate. Discover the Living Panorama.',
+    url: 'https://4seasons-hub.com',
+    siteName: '4 Seasons Hub',
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '4 Seasons Real Estate Hub',
+    description: 'Egypt\'s premier destination for luxury real estate.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export const dynamic = 'force-dynamic';

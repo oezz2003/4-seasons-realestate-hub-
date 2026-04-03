@@ -54,9 +54,10 @@ export default {
           lowest: '#ffffff',
           container: {
             DEFAULT: '#e7e8eb',
-            low: '#f0f0f3',
-            high: '#e1e2e6',
-            highest: '#dbdde0',
+            low: 'hsl(var(--surface-container-low))',
+            lowest: 'hsl(var(--surface-container-lowest))',
+            high: 'hsl(var(--surface-container-high))',
+            highest: 'hsl(var(--surface-container-highest))',
           }
         },
         muted: {

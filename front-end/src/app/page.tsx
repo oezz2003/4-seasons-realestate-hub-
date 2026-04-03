@@ -8,6 +8,7 @@ import Link from "next/link";
 import { AnimatedStats } from "@/components/animated-stats";
 import { LocationsMap } from "@/components/locations-map";
 import { getPartners, getNewLaunches, getFeaturedProperties, getTestimonials, getProperties, getCompounds, getDevelopers } from "@/lib/api";
+import { HeroSearch } from "@/components/hero-search";
 import { getImageUrl, getPlaceholderImage } from "@/lib/image-helpers";
 
 export default async function Home() {
@@ -36,95 +37,51 @@ export default async function Home() {
   const sideProperty = featuredPropertiesData.results[1] || newLaunchesData.results[1];
 
   return (
-    <div className="flex flex-col -mt-[80px]">
-      <main className="max-w-7xl mx-auto px-4 md:px-8 pt-24 md:pt-32 pb-24">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
-          <div className="col-span-1 md:col-span-12 lg:col-span-8 relative group overflow-hidden rounded-[2rem] md:rounded-[3rem]">
-            <div className="aspect-[4/3] md:aspect-auto md:h-[600px] relative overflow-hidden">
-              <Image 
-                src={getImageUrl(heroProperty?.main_image, getPlaceholderImage('property'))}
-                alt={heroProperty?.title || "Luxury Villa"}
-                fill
-                className="object-cover transition-transform duration-1000 group-hover:scale-105"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-              <div className="absolute bottom-6 md:bottom-12 left-6 md:left-12 right-6 md:right-12">
-                <span className="bg-tertiary text-on-tertiary px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] mb-4 inline-block backdrop-blur-md">
-                  Summer Selection
-                </span>
-                <h1 className="font-headline text-5xl md:text-8xl font-black text-white leading-[0.9] tracking-tighter mb-2">
-                  Living<br/>Panorama
-                </h1>
-              </div>
-            </div>
+    <main className="flex flex-col -mt-[80px]">
+      {/* Cinematic Hero Section */}
+      <section className="relative h-[90vh] min-h-[700px] w-full overflow-hidden flex items-center justify-center">
+        {/* Full-Bleed Background with Ken Burns Effect */}
+        <div className="absolute inset-0 z-0">
+          <Image 
+            src={getImageUrl(heroProperty?.main_image, "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=2000")}
+            alt="Living Panorama"
+            fill
+            className="object-cover opacity-90 scale-105"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-background dark:to-background" />
+          <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" />
+        </div>
+
+        {/* Hero Narrative & Search Centerpiece */}
+        <div className="container mx-auto px-8 relative z-10 text-center space-y-12 max-w-6xl">
+          <div className="space-y-6 animate-fade-in-up">
+            <span className="bg-primary/20 backdrop-blur-xl text-primary-foreground border border-white/20 px-6 py-2 rounded-full text-[11px] font-black uppercase tracking-[0.4em] inline-block shadow-2xl">
+              Equinox Heritage Edition
+            </span>
+            <h1 className="font-headline text-6xl md:text-9xl font-black text-white leading-[0.85] tracking-tighter drop-shadow-2xl">
+              Living<br/>Panorama<span className="text-primary-foreground">.</span>
+            </h1>
+            <p className="text-white/80 max-w-2xl mx-auto text-lg md:text-xl font-body font-medium leading-relaxed drop-shadow-lg">
+              Egypt&apos;s most exclusive enclaves, curated with the 4 Seasons Standard. Experience the pinnacle of architectural serenity.
+            </p>
           </div>
-          
-          <div className="col-span-1 md:col-span-12 lg:col-span-4 flex flex-col gap-6 h-full">
-            <div className="bg-secondary-container p-8 md:p-10 rounded-[2rem] md:rounded-[3rem] editorial-shadow flex flex-col justify-center h-full min-h-[300px]">
-              <h2 className="font-headline text-3xl font-bold text-on-secondary-container mb-4 tracking-tight">Escape to the Coast</h2>
-              <p className="text-on-secondary-container/70 mb-8 leading-relaxed font-body">
-                Discover exclusive retreats in North Coast and El Gouna, curated for the discerning traveler.
-              </p>
-              <Link href="/search?location=North%20Coast">
-                <button className="flex items-center gap-2 font-black text-secondary group text-sm tracking-widest uppercase">
-                  Explore Shorelines 
-                  <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                </button>
-              </Link>
-            </div>
-            
-            <div className="hidden lg:block relative h-full min-h-[250px] rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl">
-              <Image 
-                src={getImageUrl(sideProperty?.main_image, getPlaceholderImage('property'))}
-                alt="Interior Luxury"
-                fill
-                className="object-cover"
-              />
-            </div>
+
+          <div className="animate-fade-in-up delay-200">
+            <HeroSearch />
           </div>
         </div>
 
-        {/* Search Bar Overlay */}
-        <div className="mt-[-40px] relative z-20 max-w-5xl mx-auto px-4">
-          <div className="bg-white/90 backdrop-blur-2xl p-3 md:p-4 rounded-full shadow-[0_30px_60px_rgba(0,0,0,0.12)] flex flex-wrap md:flex-nowrap items-center gap-2 border border-white/20">
-            <div className="flex-1 px-4 md:px-8 flex items-center gap-4 border-r border-slate-100 min-w-[200px]">
-              <MapPin className="w-5 h-5 text-primary shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Location</span>
-                <input 
-                  className="w-full border-none focus:ring-0 text-on-surface font-bold placeholder:text-slate-300 p-0 bg-transparent text-sm h-6" 
-                  placeholder="Where in Egypt?" 
-                  type="text"
-                />
-              </div>
-            </div>
-            
-            <div className="flex-1 px-4 md:px-8 flex items-center gap-4 border-r border-slate-100 min-w-[150px] hidden md:flex">
-              <HomeIcon className="w-5 h-5 text-primary shrink-0" />
-              <div className="flex flex-col">
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Typology</span>
-                <select className="w-full border-none focus:ring-0 text-on-surface font-bold p-0 bg-transparent text-sm h-6 appearance-none">
-                  <option>Any Type</option>
-                  <option>Villa</option>
-                  <option>Penthouse</option>
-                  <option>Chalet</option>
-                </select>
-              </div>
-            </div>
-
-            <Link href="/search" className="w-full md:w-auto">
-              <button className="w-full md:w-auto bg-primary text-on-primary px-8 md:px-12 py-4 rounded-full font-black hover:bg-primary-dim transition-all flex items-center justify-center gap-3 shadow-xl shadow-primary/20 scale-95 hover:scale-100 active:scale-90 duration-200 uppercase tracking-widest text-xs">
-                <Search className="w-4 h-4" /> 
-                Search
-              </button>
-            </Link>
-          </div>
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 animate-bounce opacity-40">
+           <div className="w-[1px] h-20 bg-gradient-to-b from-white to-transparent" />
         </div>
-      </main>
+      </section>
+
+      
 
       {/* Partners Section */}
-      <section className="bg-surface py-20 border-y border-slate-100">
+      <section className="bg-surface py-20 border-y border-slate-100 dark:border-slate-800">
         <div className="container mx-auto px-8">
           <p className="font-label text-center text-[10px] uppercase tracking-[0.4em] text-muted-foreground/60 mb-12 font-bold">Trusted by Industry Leaders</p>
           <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-30 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-700">
@@ -271,7 +228,7 @@ export default async function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 max-w-6xl mx-auto items-start">
             {testimonialsData.results.slice(0, 2).map((testimonial, index) => (
               <div key={testimonial.id} className="animate-fade-in-up group" style={{ animationDelay: `${index * 0.1}s` }}>
-                <div className="relative p-12 rounded-[3rem] bg-surface-container-low/50 backdrop-blur-xl border border-slate-100 dark:border-slate-800 editorial-shadow transition-transform hover:-translate-y-2 duration-500">
+                <div className="relative p-12 rounded-[3rem] bg-surface-container-low/50 backdrop-blur-xl border border-slate-100 dark:border-slate-800/50 editorial-shadow transition-transform hover:-translate-y-2 duration-500">
                   <div className="font-headline text-8xl absolute -top-10 -left-6 text-primary/10 select-none">“</div>
                   <p className="text-xl md:text-2xl font-body font-medium leading-[1.6] mb-12 text-on-surface/80 relative z-10">
                     {testimonial.testimonial_text}
@@ -326,6 +283,6 @@ export default async function Home() {
           </div>
         </div>
       </section>
-    </div>
+    </main>
   );
 }

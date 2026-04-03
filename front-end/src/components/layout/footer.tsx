@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 export function Footer() {
   return (
-    <footer className="bg-surface-container-low border-t border-slate-200 dark:border-slate-800 pt-20 pb-10">
+    <footer className="bg-surface-container-low border-t border-border/10 pt-20 pb-10">
       <div className="max-w-7xl mx-auto px-8 grid grid-cols-1 md:grid-cols-4 gap-12 font-body text-sm uppercase tracking-widest font-black">
         <div className="col-span-1 md:col-span-1">
           <Link href="/" className="flex items-center space-x-3 mb-6 group">
@@ -16,10 +16,10 @@ export function Footer() {
             Curating the finest real estate across Egypt&apos;s most exclusive destinations. Excellence in every season.
           </p>
           <div className="flex gap-4">
-            <Link href="#" className="p-2 bg-white dark:bg-slate-900 rounded-full shadow-sm hover:text-primary transition-all">
+            <Link href="#" className="p-2 bg-surface-container-lowest rounded-full shadow-sm hover:text-primary transition-all border border-border/5">
               <Facebook className="w-5 h-5" />
             </Link>
-            <Link href="#" className="p-2 bg-white dark:bg-slate-900 rounded-full shadow-sm hover:text-primary transition-all">
+            <Link href="#" className="p-2 bg-surface-container-lowest rounded-full shadow-sm hover:text-primary transition-all border border-border/5">
               <Instagram className="w-5 h-5" />
             </Link>
           </div>
@@ -50,7 +50,7 @@ export function Footer() {
           <p className="text-muted-foreground normal-case tracking-normal mb-6 font-medium">Stay updated with the latest Egyptian luxury releases.</p>
           <div className="flex flex-col gap-2">
             <input 
-              className="bg-white dark:bg-slate-900 border-none rounded-lg px-4 py-3 text-sm focus:ring-primary shadow-sm" 
+              className="bg-surface-container-lowest border-border/5 rounded-lg px-4 py-3 text-sm focus:ring-primary shadow-sm dark:bg-slate-900/50" 
               placeholder="Email Address" 
               type="email"
             />
@@ -59,7 +59,7 @@ export function Footer() {
         </div>
       </div>
       
-      <div className="max-w-7xl mx-auto px-8 mt-20 pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-6 opacity-60 text-xs font-bold tracking-widest uppercase">
+      <div className="max-w-7xl mx-auto px-8 mt-20 pt-8 border-t border-border/10 flex flex-col md:flex-row justify-between items-center gap-6 opacity-60 text-xs font-bold tracking-widest uppercase">
         <p>© {new Date().getFullYear()} 4 Seasons Hub. Curating Time and Place.</p>
         <div className="flex gap-8">
           <Link href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>

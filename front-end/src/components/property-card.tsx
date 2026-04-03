@@ -46,7 +46,7 @@ export function PropertyCard(props: PropertyCardProps) {
   const formattedPrice = formatPrice(props.price);
 
   return (
-    <Card className="group h-full overflow-hidden border-none shadow-xl shadow-black/5 bg-white flex flex-col transition-all duration-500 hover:shadow-2xl">
+    <Card className="group h-full overflow-hidden border-none shadow-xl shadow-black/5 bg-card flex flex-col transition-all duration-500 hover:shadow-2xl">
       <div className="relative h-72 w-full overflow-hidden">
         <Image
           src={imageUrl}
@@ -96,7 +96,7 @@ export function PropertyCard(props: PropertyCardProps) {
         </div>
         
         <div className="absolute bottom-6 left-4">
-          <div className="bg-white/95 backdrop-blur-md px-6 py-2.5 rounded-full shadow-lg">
+          <div className="bg-background/95 backdrop-blur-md px-6 py-2.5 rounded-full shadow-lg dark:bg-card/90">
              <span className="text-secondary text-sm font-bold tracking-tight">{props.title}</span>
           </div>
         </div>
@@ -115,15 +115,15 @@ export function PropertyCard(props: PropertyCardProps) {
 
         {/* Info Grid - 3 Boxes */}
         <div className="grid grid-cols-3 gap-2">
-           <div className="bg-[#F8F9FA] rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 border border-black/5 hover:border-primary/20 transition-colors">
+           <div className="bg-surface-container-low rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 border border-black/5 dark:border-white/5 hover:border-primary/20 transition-colors">
               <BedDouble className="w-4 h-4 text-secondary/40" />
               <span className="text-[10px] font-bold text-secondary uppercase tracking-tighter">{beds} Beds</span>
            </div>
-           <div className="bg-[#F8F9FA] rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 border border-black/5 hover:border-primary/20 transition-colors">
+           <div className="bg-surface-container-low rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 border border-black/5 dark:border-white/5 hover:border-primary/20 transition-colors">
               <Bath className="w-4 h-4 text-secondary/40" />
               <span className="text-[10px] font-bold text-secondary uppercase tracking-tighter">{baths} Baths</span>
            </div>
-           <div className="bg-[#F8F9FA] rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 border border-black/5 hover:border-primary/20 transition-colors">
+           <div className="bg-surface-container-low rounded-xl p-3 flex flex-col items-center justify-center gap-1.5 border border-black/5 dark:border-white/5 hover:border-primary/20 transition-colors">
               <AreaChart className="w-4 h-4 text-secondary/40" />
               <span className="text-[10px] font-bold text-secondary uppercase tracking-tighter">{props.area} sqm</span>
            </div>

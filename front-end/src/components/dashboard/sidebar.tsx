@@ -12,6 +12,8 @@ import {
   FileText,
   Settings,
   Star,
+  Layout,
+  MessageSquare,
 } from 'lucide-react';
 
 const navigation = [
@@ -20,6 +22,8 @@ const navigation = [
   { name: 'Compounds', href: '/admin/dashboard/compounds', icon: MapPin },
   { name: 'Developers', href: '/admin/dashboard/developers', icon: Users },
   { name: 'Blog Posts', href: '/admin/dashboard/blog', icon: FileText },
+  { name: 'Page Content', href: '/admin/dashboard/pages', icon: Layout },
+  { name: 'Inquiries', href: '/admin/dashboard/contacts', icon: MessageSquare },
   { name: 'Locations', href: '/admin/dashboard/settings/locations', icon: MapPin },
   { name: 'Amenities', href: '/admin/dashboard/settings/amenities', icon: Star },
 ];

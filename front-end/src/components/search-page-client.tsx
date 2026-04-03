@@ -113,8 +113,8 @@ export function SearchPageClient({
   return (
     <div className="container mx-auto py-12 md:py-20 px-4 relative">
       <div className="flex flex-col mb-12">
-        <span className="text-[#005F73] text-[10px] font-bold uppercase tracking-[0.3em] mb-4">EQUINOX HERITAGE EDITION</span>
-        <h1 className="text-5xl md:text-7xl font-display tracking-tight text-[#001219] mb-6 leading-[1.1]">
+        <span className="text-primary text-[10px] font-bold uppercase tracking-[0.3em] mb-4">EQUINOX HERITAGE EDITION</span>
+        <h1 className="text-5xl md:text-7xl font-display tracking-tight text-on-background mb-6 leading-[1.1]">
           Discovery<br />Reimagined.
         </h1>
         <p className="text-muted-foreground/80 max-w-xl text-sm leading-relaxed">
@@ -123,14 +123,14 @@ export function SearchPageClient({
       </div>
 
       {/* Horizontal Filter Bar (Command Center) */}
-      <div className="bg-white rounded-[2rem] p-10 shadow-2xl shadow-black/5 border border-black/[0.03] mb-20">
+      <div className="bg-card rounded-[2rem] p-10 shadow-2xl shadow-black/5 border border-border/10 mb-20 dark:bg-surface-container-low/40 dark:backdrop-blur-xl">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 items-end">
           {/* Location & Type */}
           <div className="md:col-span-3 space-y-6">
             <div className="space-y-3">
               <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Location</label>
               <Select value={filters.location} onValueChange={(val) => updateFilter('location', val)}>
-                <SelectTrigger className="bg-[#F8F9FA] border-none rounded-xl h-14">
+                <SelectTrigger className="bg-surface-container-low border-none rounded-xl h-14 dark:bg-card">
                   <SelectValue placeholder="Select Location" />
                 </SelectTrigger>
                 <SelectContent>
@@ -142,7 +142,7 @@ export function SearchPageClient({
             <div className="space-y-3">
               <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Property Type</label>
               <Select value={filters.type} onValueChange={(val) => updateFilter('type', val)}>
-                <SelectTrigger className="bg-[#F8F9FA] border-none rounded-xl h-14">
+                <SelectTrigger className="bg-surface-container-low border-none rounded-xl h-14 dark:bg-card">
                   <SelectValue placeholder="Select Type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -206,8 +206,8 @@ export function SearchPageClient({
                     className={cn(
                       "flex-1 h-12 rounded-lg border text-xs font-bold transition-all duration-300",
                       (filters.beds === beds || (beds === '3+' && filters.beds === '3'))
-                        ? "bg-[#005F73] border-[#005F73] text-white shadow-lg"
-                        : "bg-white border-black/10 text-secondary hover:border-[#005F73]/30"
+                        ? "bg-primary border-primary text-white shadow-lg"
+                        : "bg-surface-container-low border-border/10 text-secondary hover:border-primary/30 dark:bg-card"
                     )}
                    >
                      {beds}
@@ -232,9 +232,9 @@ export function SearchPageClient({
           </p>
         </div>
         
-        <div className="flex items-center gap-3 bg-[#F8F9FA] px-4 py-2.5 rounded-full border border-black/[0.03]">
+        <div className="flex items-center gap-3 bg-surface-container-low px-4 py-2.5 rounded-full border border-border/10 dark:bg-card">
            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">Sort by:</span>
-           <button className="text-[11px] font-bold text-[#005F73] uppercase tracking-widest hover:underline decoration-2 underline-offset-4 flex items-center gap-1.5">
+           <button className="text-[11px] font-bold text-primary uppercase tracking-widest hover:underline decoration-2 underline-offset-4 flex items-center gap-1.5">
              Recommended
              <ChevronDown className="w-3.5 h-3.5" />
            </button>

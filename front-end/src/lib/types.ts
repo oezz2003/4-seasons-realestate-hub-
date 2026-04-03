@@ -136,3 +136,15 @@ export interface ContactFormSubmission {
   message: string;
   submitted_at: string;
 }
+
+// Page Content Type for CMS
+export interface PageContent {
+  id?: number;
+  slug: string;
+  title: string;
+  subtitle?: string;
+  content: string; // Dynamic HTML or JSON string
+  hero_image?: string;
+  metadata?: Record<string, any>; // For extra fields (vision, mission, etc.)
+  updated_at?: string;
+}

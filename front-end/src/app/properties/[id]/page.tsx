@@ -1,3 +1,4 @@
+import { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +15,24 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { notFound } from 'next/navigation';
 import { getPropertyById, getProperties } from '@/lib/api';
 import { getImageUrl, getPlaceholderImage, getLocationName, getDeveloperName, getCompoundName } from '@/lib/image-helpers';
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const resolvedParams = await params;
+  const property = await getPropertyById(resolvedParams.id);
+  
+  if (!property) return { title: 'Property Not Found' };
+
+  return {
+    title: property.title,
+    description: property.description.substring(0, 160).replace(/<[^>]*>/g, ''),
+    openGraph: {
+      title: `${property.title} | 4 Seasons Hub`,
+      description: `Explore this stunning ${property.property_type} in ${getLocationName(property.location)}. Discover luxury living in Egypt.`,
+      images: [getImageUrl(property.main_image, getPlaceholderImage('property'))],
+      type: 'article',
+    }
+  };
+}
 
 export default async function PropertyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
@@ -38,6 +57,8 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
     ...property.gallery_images.map(img => getImageUrl(img.image, getPlaceholderImage('property'))),
     property.floor_plan_image ? getImageUrl(property.floor_plan_image) : null,
     property.map_image ? getImageUrl(property.map_image) : null,
+    property.compound?.main_image ? getImageUrl(property.compound.main_image) : null,
+    property.developer?.logo ? getImageUrl(property.developer.logo) : null,
   ].filter((img): img is string => Boolean(img));
 
   return (
@@ -58,9 +79,9 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
             <div>
               <span className="text-secondary font-black tracking-[0.4em] uppercase text-[10px] mb-8 block">Architectural Narrative</span>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                 <h2 className="font-headline text-5xl font-black tracking-tighter leading-[0.9]">
+                 <h1 className="font-headline text-5xl font-black tracking-tighter leading-[0.9]">
                    Where raw tectonic power meets the <i className="font-medium text-emerald-800">serenity of the sky.</i>
-                 </h2>
+                 </h1>
                  <div 
                     className="font-body text-muted-foreground/90 text-lg leading-relaxed space-y-6"
                     dangerouslySetInnerHTML={{ __html: property.description }}
@@ -76,7 +97,7 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
                  { label: 'Private Pool', value: 'Private', icon: Zap },
                  { label: 'Smart Automation', value: 'Smart', icon: Rocket }
                ].map((item, idx) => (
-                 <div key={idx} className="bg-surface-container-low rounded-[2rem] p-8 text-center border border-white/50 group hover:bg-white hover:shadow-xl transition-all duration-500">
+                 <div key={idx} className="bg-surface-container-low rounded-[2rem] p-8 text-center border border-white/50 dark:border-white/5 group hover:bg-card hover:shadow-xl transition-all duration-500">
                     <item.icon className="w-8 h-8 mx-auto mb-6 text-primary group-hover:scale-110 transition-transform" />
                     <p className="font-headline text-2xl font-black mb-1">{item.value}</p>
                     <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">{item.label}</p>
@@ -110,7 +131,7 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
           {/* Right Column: Listing Card Sidebar */}
           <div className="lg:col-span-4">
             <div className="sticky top-32 space-y-6">
-              <Card className="rounded-[3rem] bg-[#F2F2F2] border-none p-10 space-y-10 shadow-[0_40px_80px_rgba(0,0,0,0.06)]">
+              <Card className="rounded-[3rem] bg-surface-container-low border-none p-10 space-y-10 shadow-[0_40px_80px_rgba(0,0,0,0.06)] dark:shadow-[0_40px_80px_rgba(0,0,0,0.4)]">
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">Listing Price</p>
@@ -169,11 +190,11 @@ export default async function PropertyDetailsPage({ params }: { params: Promise<
 
               {/* Trust Badges */}
               <div className="flex gap-4 px-4 overflow-x-auto pb-4 no-scrollbar">
-                <Badge variant="outline" className="rounded-full px-5 py-2 whitespace-nowrap bg-white/50 border-white font-black uppercase tracking-widest text-[8px] flex items-center gap-2">
+                <Badge variant="outline" className="rounded-full px-5 py-2 whitespace-nowrap bg-surface-container-lowest/50 border-white/20 dark:border-white/5 font-black uppercase tracking-widest text-[8px] flex items-center gap-2">
                   <ShieldCheck className="w-3 h-3 text-secondary" />
                   Verified Listing
                 </Badge>
-                <Badge variant="outline" className="rounded-full px-5 py-2 whitespace-nowrap bg-white/50 border-white font-black uppercase tracking-widest text-[8px] flex items-center gap-2">
+                <Badge variant="outline" className="rounded-full px-5 py-2 whitespace-nowrap bg-surface-container-lowest/50 border-white/20 dark:border-white/5 font-black uppercase tracking-widest text-[8px] flex items-center gap-2">
                    <Zap className="w-3 h-3 text-emerald-600" />
                    New Launch
                 </Badge>
