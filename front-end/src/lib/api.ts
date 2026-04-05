@@ -2,8 +2,18 @@ import { BlogPost, Author, Amenity, Location, Developer, Compound, Property, Pro
 
 const getBaseUrl = () => {
   if (typeof window !== 'undefined') return ''; // Browser uses relative path
-  if (process.env.NEXTAUTH_URL) return process.env.NEXTAUTH_URL.replace(/\/$/, '');
+  
+  // Prioritize production URL
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  
+  // Use NEXTAUTH_URL but only if it's not localhost when on VERCEL
+  if (process.env.NEXTAUTH_URL) {
+    const url = process.env.NEXTAUTH_URL.replace(/\/$/, '');
+    if (!url.includes('localhost') || !process.env.VERCEL) {
+        return url;
+    }
+  }
+  
   return 'http://127.0.0.1:3000'; // Fallback for local SSR
 };
 
