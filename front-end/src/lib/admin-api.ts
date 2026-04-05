@@ -11,8 +11,9 @@ import {
   ContactFormSubmission,
   PageContent
 } from './types';
+import { getAdminApiBaseUrl } from './api';
 
-const ADMIN_API_BASE_URL = (process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL || '/api/').replace(/\/$/, '') + '/';
+// ADMIN_API_BASE_URL is now a dynamic getter from api.ts
 
 interface ApiResponse<T> {
   results: T[];
@@ -34,7 +35,7 @@ const fetcher = async <T>(endpoint: string, options: RequestInit = {}, params?: 
     headers.set('Authorization', `Token ${token}`);
   }
 
-  let urlString = `${ADMIN_API_BASE_URL}${endpoint.replace(/^\//, '')}`;
+  let urlString = `${getAdminApiBaseUrl()}${endpoint.replace(/^\//, '')}`;
   
   if (params) {
     const searchParams = new URLSearchParams();

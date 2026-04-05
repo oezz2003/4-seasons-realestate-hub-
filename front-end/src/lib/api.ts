@@ -3,10 +3,13 @@ import { BlogPost, Author, Amenity, Location, Developer, Compound, Property, Pro
 const getBaseUrl = () => {
   if (typeof window !== 'undefined') return ''; // Browser uses relative path
   
-  // Prioritize production URL
+  // 1. Explicitly set Base URL (highest priority)
+  if (process.env.NEXT_PUBLIC_BASE_URL) return process.env.NEXT_PUBLIC_BASE_URL.replace(/\/$/, '');
+  
+  // 2. Vercel deployment URL
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
   
-  // Use NEXTAUTH_URL but only if it's not localhost when on VERCEL
+  // 3. NextAuth URL (ignore localhost if on Vercel)
   if (process.env.NEXTAUTH_URL) {
     const url = process.env.NEXTAUTH_URL.replace(/\/$/, '');
     if (!url.includes('localhost') || !process.env.VERCEL) {
@@ -14,11 +17,11 @@ const getBaseUrl = () => {
     }
   }
   
-  return 'http://127.0.0.1:3000'; // Fallback for local SSR
+  return 'http://localhost:3000'; // Default local fallback
 };
 
-const API_BASE_URL = `${getBaseUrl()}/api/`;
-const ADMIN_API_BASE_URL = `${getBaseUrl()}/api/`;
+export const getApiBaseUrl = () => `${getBaseUrl()}/api/`;
+export const getAdminApiBaseUrl = () => `${getBaseUrl()}/api/`;
 
 // Token storage utility
 const getAuthToken = (): string | null => {
@@ -82,7 +85,7 @@ interface TestimonialFilters {
 }
 
 export async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<ApiResponse<T>> {
-  const url = `${API_BASE_URL}${endpoint}`;
+  const url = `${getApiBaseUrl()}${endpoint}`;
   const response = await fetch(url, options);
   if (!response.ok) throw new Error(`API request failed: ${response.statusText}`);
   return response.json();
@@ -90,7 +93,7 @@ export async function fetchApi<T>(endpoint: string, options?: RequestInit): Prom
 
 export async function fetchApiWithParams<T>(endpoint: string, params?: Record<string, any>, baseURL?: string): Promise<ApiResponse<T>> {
   try {
-    const base = (baseURL || API_BASE_URL).replace(/\/$/, '');
+    const base = (baseURL || getApiBaseUrl()).replace(/\/$/, '');
     const absoluteBase = base.startsWith('http') ? base : (typeof window !== 'undefined' ? window.location.origin + (base.startsWith('/') ? '' : '/') + base : base);
     const url = new URL(endpoint.replace(/^\//, ''), absoluteBase.endsWith('/') ? absoluteBase : absoluteBase + '/');
     
@@ -108,7 +111,7 @@ export async function fetchApiWithParams<T>(endpoint: string, params?: Record<st
 
     // Add auth token if available (for admin calls)
     const token = getAuthToken();
-    if (token && (url.toString().includes('/admin/') || url.toString().includes(ADMIN_API_BASE_URL))) {
+    if (token && (url.toString().includes('/admin/') || url.toString().includes(getAdminApiBaseUrl()))) {
       headers['Authorization'] = `Token ${token}`;
     }
 
@@ -135,7 +138,7 @@ async function genericFetch<T>(url: string, method: string = 'GET', data?: any):
   };
 
   const token = getAuthToken();
-  if (token && (url.includes('/admin/') || url.includes(ADMIN_API_BASE_URL))) {
+  if (token && (url.includes('/admin/') || url.includes(getAdminApiBaseUrl()))) {
     headers['Authorization'] = `Token ${token}`;
   }
 
@@ -181,7 +184,7 @@ export async function getProperties(filters?: PropertyFilters, useAdminApi: bool
     if (filters?.page) params.page = filters.page;
     if (filters?.page_size) params.page_size = filters.page_size;
 
-    const baseUrl = useAdminApi ? ADMIN_API_BASE_URL : API_BASE_URL;
+    const baseUrl = useAdminApi ? getAdminApiBaseUrl() : getApiBaseUrl();
     return await fetchApiWithParams<Property>('properties/', params, baseUrl);
   } catch (error) {
     console.error('Error fetching properties:', error);
@@ -207,7 +210,7 @@ export async function getAdminProperties(filters?: PropertyFilters): Promise<Api
     if (filters?.page) params.page = filters.page;
     if (filters?.page_size) params.page_size = filters.page_size;
 
-    return await fetchApiWithParams<Property>('properties/', params, ADMIN_API_BASE_URL);
+    return await fetchApiWithParams<Property>('properties/', params, getAdminApiBaseUrl());
   } catch (error) {
     console.error('Error fetching admin properties:', error);
     return { results: [], count: 0, next: null, previous: null };
@@ -216,7 +219,7 @@ export async function getAdminProperties(filters?: PropertyFilters): Promise<Api
 
 export async function getPropertyById(id: string): Promise<Property | null> {
   try {
-    return await genericFetch<Property>(`${API_BASE_URL}properties/${id}/`);
+    return await genericFetch<Property>(`${getApiBaseUrl()}properties/${id}/`);
   } catch (error) {
     console.error('Error fetching property by ID:', error);
     return null;
@@ -235,7 +238,7 @@ export async function getPropertyBySlug(slug: string): Promise<Property | null> 
 
 export async function createProperty(data: Partial<Property>): Promise<Property> {
   try {
-    return await genericFetch<Property>(`${ADMIN_API_BASE_URL}properties/`, 'POST', data);
+    return await genericFetch<Property>(`${getAdminApiBaseUrl()}properties/`, 'POST', data);
   } catch (error) {
     console.error('Error creating property:', error);
     throw error;
@@ -244,7 +247,7 @@ export async function createProperty(data: Partial<Property>): Promise<Property>
 
 export async function updateProperty(id: number, data: Partial<Property>): Promise<Property> {
   try {
-    return await genericFetch<Property>(`${ADMIN_API_BASE_URL}properties/${id}/`, 'PUT', data);
+    return await genericFetch<Property>(`${getAdminApiBaseUrl()}properties/${id}/`, 'PUT', data);
   } catch (error) {
     console.error('Error updating property:', error);
     throw error;
@@ -253,7 +256,7 @@ export async function updateProperty(id: number, data: Partial<Property>): Promi
 
 export async function deleteProperty(id: number): Promise<void> {
   try {
-    await genericFetch(`${ADMIN_API_BASE_URL}properties/${id}/`, 'DELETE');
+    await genericFetch(`${getAdminApiBaseUrl()}properties/${id}/`, 'DELETE');
   } catch (error) {
     console.error('Error deleting property:', error);
     throw error;
@@ -262,7 +265,7 @@ export async function deleteProperty(id: number): Promise<void> {
 
 export async function getFeaturedProperties(): Promise<ApiResponse<Property>> {
   try {
-    return await fetchApiWithParams<Property>('properties/', { is_featured: true }, ADMIN_API_BASE_URL);
+    return await fetchApiWithParams<Property>('properties/', { is_featured: true }, getAdminApiBaseUrl());
   } catch (error) {
     console.error('Error fetching featured properties:', error);
     return { results: [], count: 0, next: null, previous: null };
@@ -271,7 +274,7 @@ export async function getFeaturedProperties(): Promise<ApiResponse<Property>> {
 
 export async function getNewLaunches(): Promise<ApiResponse<Property>> {
   try {
-    return await fetchApiWithParams<Property>('properties/', { is_new_launch: true }, ADMIN_API_BASE_URL);
+    return await fetchApiWithParams<Property>('properties/', { is_new_launch: true }, getAdminApiBaseUrl());
   } catch (error) {
     console.error('Error fetching new launches:', error);
     return { results: [], count: 0, next: null, previous: null };
@@ -289,7 +292,7 @@ export async function getCompounds(filters?: CompoundFilters, useAdminApi: boole
     if (filters?.page) params.page = filters.page;
     if (filters?.page_size) params.page_size = filters.page_size;
 
-    const baseUrl = useAdminApi ? ADMIN_API_BASE_URL : API_BASE_URL;
+    const baseUrl = useAdminApi ? getAdminApiBaseUrl() : getApiBaseUrl();
     return await fetchApiWithParams<Compound>('compounds/', params, baseUrl);
   } catch (error) {
     console.error('Error fetching compounds:', error);
@@ -307,7 +310,7 @@ export async function getAdminCompounds(filters?: CompoundFilters): Promise<ApiR
     if (filters?.page) params.page = filters.page;
     if (filters?.page_size) params.page_size = filters.page_size;
 
-    return await fetchApiWithParams<Compound>('compounds/', params, ADMIN_API_BASE_URL);
+    return await fetchApiWithParams<Compound>('compounds/', params, getAdminApiBaseUrl());
   } catch (error) {
     console.error('Error fetching admin compounds:', error);
     return { results: [], count: 0, next: null, previous: null };
@@ -316,7 +319,7 @@ export async function getAdminCompounds(filters?: CompoundFilters): Promise<ApiR
 
 export async function getCompoundById(id: string): Promise<Compound | null> {
   try {
-    return await genericFetch<Compound>(`${API_BASE_URL}compounds/${id}/`);
+    return await genericFetch<Compound>(`${getApiBaseUrl()}compounds/${id}/`);
   } catch (error) {
     console.error('Error fetching compound by ID:', error);
     return null;
@@ -325,7 +328,7 @@ export async function getCompoundById(id: string): Promise<Compound | null> {
 
 export async function getAdminCompoundById(id: string): Promise<Compound | null> {
   try {
-    return await genericFetch<Compound>(`${ADMIN_API_BASE_URL}compounds/${id}/`);
+    return await genericFetch<Compound>(`${getAdminApiBaseUrl()}compounds/${id}/`);
   } catch (error) {
     console.error('Error fetching admin compound by ID:', error);
     return null;
@@ -344,7 +347,7 @@ export async function getCompoundBySlug(slug: string): Promise<Compound | null> 
 
 export async function createCompound(data: Partial<Compound>): Promise<Compound> {
   try {
-    return await genericFetch<Compound>(`${ADMIN_API_BASE_URL}compounds/`, 'POST', data);
+    return await genericFetch<Compound>(`${getAdminApiBaseUrl()}compounds/`, 'POST', data);
   } catch (error) {
     console.error('Error creating compound:', error);
     throw error;
@@ -353,7 +356,7 @@ export async function createCompound(data: Partial<Compound>): Promise<Compound>
 
 export async function updateCompound(id: number, data: Partial<Compound>): Promise<Compound> {
   try {
-    return await genericFetch<Compound>(`${ADMIN_API_BASE_URL}compounds/${id}/`, 'PUT', data);
+    return await genericFetch<Compound>(`${getAdminApiBaseUrl()}compounds/${id}/`, 'PUT', data);
   } catch (error) {
     console.error('Error updating compound:', error);
     throw error;
@@ -362,7 +365,7 @@ export async function updateCompound(id: number, data: Partial<Compound>): Promi
 
 export async function deleteCompound(id: number): Promise<void> {
   try {
-    await genericFetch(`${ADMIN_API_BASE_URL}compounds/${id}/`, 'DELETE');
+    await genericFetch(`${getAdminApiBaseUrl()}compounds/${id}/`, 'DELETE');
   } catch (error) {
     console.error('Error deleting compound:', error);
     throw error;
@@ -378,7 +381,7 @@ export async function getDevelopers(filters?: DeveloperFilters, useAdminApi: boo
     if (filters?.page) params.page = filters.page;
     if (filters?.page_size) params.page_size = filters.page_size;
 
-    const baseUrl = useAdminApi ? ADMIN_API_BASE_URL : API_BASE_URL;
+    const baseUrl = useAdminApi ? getAdminApiBaseUrl() : getApiBaseUrl();
     return await fetchApiWithParams<Developer>('developers/', params, baseUrl);
   } catch (error) {
     console.error('Error fetching developers:', error);
@@ -394,7 +397,7 @@ export async function getAdminDevelopers(filters?: DeveloperFilters): Promise<Ap
     if (filters?.page) params.page = filters.page;
     if (filters?.page_size) params.page_size = filters.page_size;
 
-    return await fetchApiWithParams<Developer>('developers/', params, ADMIN_API_BASE_URL);
+    return await fetchApiWithParams<Developer>('developers/', params, getAdminApiBaseUrl());
   } catch (error) {
     console.error('Error fetching admin developers:', error);
     return { results: [], count: 0, next: null, previous: null };
@@ -403,7 +406,7 @@ export async function getAdminDevelopers(filters?: DeveloperFilters): Promise<Ap
 
 export async function getDeveloperById(id: string): Promise<Developer | null> {
   try {
-    return await genericFetch<Developer>(`${API_BASE_URL}developers/${id}/`);
+    return await genericFetch<Developer>(`${getApiBaseUrl()}developers/${id}/`);
   } catch (error) {
     console.error('Error fetching developer by ID:', error);
     return null;
@@ -412,7 +415,7 @@ export async function getDeveloperById(id: string): Promise<Developer | null> {
 
 export async function getAdminDeveloperById(id: string): Promise<Developer | null> {
   try {
-    return await genericFetch<Developer>(`${ADMIN_API_BASE_URL}developers/${id}/`);
+    return await genericFetch<Developer>(`${getAdminApiBaseUrl()}developers/${id}/`);
   } catch (error) {
     console.error('Error fetching admin developer by ID:', error);
     return null;
@@ -431,7 +434,7 @@ export async function getDeveloperBySlug(slug: string): Promise<Developer | null
 
 export async function createDeveloper(data: Partial<Developer>): Promise<Developer> {
   try {
-    return await genericFetch<Developer>(`${ADMIN_API_BASE_URL}developers/`, 'POST', data);
+    return await genericFetch<Developer>(`${getAdminApiBaseUrl()}developers/`, 'POST', data);
   } catch (error) {
     console.error('Error creating developer:', error);
     throw error;
@@ -440,7 +443,7 @@ export async function createDeveloper(data: Partial<Developer>): Promise<Develop
 
 export async function updateDeveloper(id: number, data: Partial<Developer>): Promise<Developer> {
   try {
-    return await genericFetch<Developer>(`${ADMIN_API_BASE_URL}developers/${id}/`, 'PUT', data);
+    return await genericFetch<Developer>(`${getAdminApiBaseUrl()}developers/${id}/`, 'PUT', data);
   } catch (error) {
     console.error('Error updating developer:', error);
     throw error;
@@ -449,7 +452,7 @@ export async function updateDeveloper(id: number, data: Partial<Developer>): Pro
 
 export async function deleteDeveloper(id: number): Promise<void> {
   try {
-    await genericFetch(`${ADMIN_API_BASE_URL}developers/${id}/`, 'DELETE');
+    await genericFetch(`${getAdminApiBaseUrl()}developers/${id}/`, 'DELETE');
   } catch (error) {
     console.error('Error deleting developer:', error);
     throw error;
@@ -468,7 +471,7 @@ export async function getLocations(params?: Record<string, any>): Promise<ApiRes
 
 export async function getLocationById(id: string): Promise<Location | null> {
   try {
-    return await genericFetch<Location>(`${API_BASE_URL}locations/${id}/`);
+    return await genericFetch<Location>(`${getApiBaseUrl()}locations/${id}/`);
   } catch (error) {
     console.error('Error fetching location by ID:', error);
     return null;
@@ -487,7 +490,7 @@ export async function getLocationBySlug(slug: string): Promise<Location | null> 
 
 export async function createLocation(data: Partial<Location>): Promise<Location> {
   try {
-    return await genericFetch<Location>(`${ADMIN_API_BASE_URL}locations/`, 'POST', data);
+    return await genericFetch<Location>(`${getAdminApiBaseUrl()}locations/`, 'POST', data);
   } catch (error) {
     console.error('Error creating location:', error);
     throw error;
@@ -496,7 +499,7 @@ export async function createLocation(data: Partial<Location>): Promise<Location>
 
 export async function updateLocation(id: number, data: Partial<Location>): Promise<Location> {
   try {
-    return await genericFetch<Location>(`${ADMIN_API_BASE_URL}locations/${id}/`, 'PUT', data);
+    return await genericFetch<Location>(`${getAdminApiBaseUrl()}locations/${id}/`, 'PUT', data);
   } catch (error) {
     console.error('Error updating location:', error);
     throw error;
@@ -505,7 +508,7 @@ export async function updateLocation(id: number, data: Partial<Location>): Promi
 
 export async function deleteLocation(id: number): Promise<void> {
   try {
-    await genericFetch(`${ADMIN_API_BASE_URL}locations/${id}/`, 'DELETE');
+    await genericFetch(`${getAdminApiBaseUrl()}locations/${id}/`, 'DELETE');
   } catch (error) {
     console.error('Error deleting location:', error);
     throw error;
@@ -515,7 +518,7 @@ export async function deleteLocation(id: number): Promise<void> {
 // ===== AMENITIES API =====
 export async function getAmenities(useAdminApi: boolean = false, params?: Record<string, any>): Promise<ApiResponse<Amenity>> {
   try {
-    const baseURL = useAdminApi ? ADMIN_API_BASE_URL : API_BASE_URL;
+    const baseURL = useAdminApi ? getAdminApiBaseUrl() : getApiBaseUrl();
     return await fetchApiWithParams<Amenity>('amenities/', params || {}, baseURL);
   } catch (error) {
     console.error('Error fetching amenities:', error);
@@ -525,7 +528,7 @@ export async function getAmenities(useAdminApi: boolean = false, params?: Record
 
 export async function createAmenity(data: Partial<Amenity>): Promise<Amenity> {
   try {
-    return await genericFetch<Amenity>(`${ADMIN_API_BASE_URL}amenities/`, 'POST', data);
+    return await genericFetch<Amenity>(`${getAdminApiBaseUrl()}amenities/`, 'POST', data);
   } catch (error) {
     console.error('Error creating amenity:', error);
     throw error;
@@ -534,7 +537,7 @@ export async function createAmenity(data: Partial<Amenity>): Promise<Amenity> {
 
 export async function updateAmenity(id: number, data: Partial<Amenity>): Promise<Amenity> {
   try {
-    return await genericFetch<Amenity>(`${ADMIN_API_BASE_URL}amenities/${id}/`, 'PUT', data);
+    return await genericFetch<Amenity>(`${getAdminApiBaseUrl()}amenities/${id}/`, 'PUT', data);
   } catch (error) {
     console.error('Error updating amenity:', error);
     throw error;
@@ -543,7 +546,7 @@ export async function updateAmenity(id: number, data: Partial<Amenity>): Promise
 
 export async function deleteAmenity(id: number): Promise<void> {
   try {
-    await genericFetch(`${ADMIN_API_BASE_URL}amenities/${id}/`, 'DELETE');
+    await genericFetch(`${getAdminApiBaseUrl()}amenities/${id}/`, 'DELETE');
   } catch (error) {
     console.error('Error deleting amenity:', error);
     throw error;
@@ -578,7 +581,7 @@ export async function getAdminBlogPosts(filters?: BlogPostFilters): Promise<ApiR
     if (filters?.page) params.page = filters.page;
     if (filters?.page_size) params.page_size = filters.page_size;
 
-    return await fetchApiWithParams<BlogPost>('blog-posts/', params, ADMIN_API_BASE_URL);
+    return await fetchApiWithParams<BlogPost>('blog-posts/', params, getAdminApiBaseUrl());
   } catch (error) {
     console.error('Error fetching admin blog posts:', error);
     return { results: [], count: 0, next: null, previous: null };
@@ -587,7 +590,7 @@ export async function getAdminBlogPosts(filters?: BlogPostFilters): Promise<ApiR
 
 export async function getBlogPostById(id: string, useAdminApi: boolean = false): Promise<BlogPost | null> {
   try {
-    const baseUrl = useAdminApi ? ADMIN_API_BASE_URL : API_BASE_URL;
+    const baseUrl = useAdminApi ? getAdminApiBaseUrl() : getApiBaseUrl();
     return await genericFetch<BlogPost>(`${baseUrl}blog-posts/${id}/`);
   } catch (error) {
     console.error('Error fetching blog post by ID:', error);
@@ -607,7 +610,7 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
 
 export async function createBlogPost(data: BlogPostInput): Promise<BlogPost> {
   try {
-    return await genericFetch<BlogPost>(`${ADMIN_API_BASE_URL}blog-posts/`, 'POST', data);
+    return await genericFetch<BlogPost>(`${getAdminApiBaseUrl()}blog-posts/`, 'POST', data);
   } catch (error) {
     console.error('Error creating blog post:', error);
     throw error;
@@ -616,7 +619,7 @@ export async function createBlogPost(data: BlogPostInput): Promise<BlogPost> {
 
 export async function updateBlogPost(id: number, data: BlogPostInput): Promise<BlogPost> {
   try {
-    return await genericFetch<BlogPost>(`${ADMIN_API_BASE_URL}blog-posts/${id}/`, 'PUT', data);
+    return await genericFetch<BlogPost>(`${getAdminApiBaseUrl()}blog-posts/${id}/`, 'PUT', data);
   } catch (error) {
     console.error('Error updating blog post:', error);
     throw error;
@@ -625,7 +628,7 @@ export async function updateBlogPost(id: number, data: BlogPostInput): Promise<B
 
 export async function deleteBlogPost(id: number): Promise<void> {
   try {
-    await genericFetch(`${ADMIN_API_BASE_URL}blog-posts/${id}/`, 'DELETE');
+    await genericFetch(`${getAdminApiBaseUrl()}blog-posts/${id}/`, 'DELETE');
   } catch (error) {
     console.error('Error deleting blog post:', error);
     throw error;
@@ -644,7 +647,7 @@ export async function getAuthors(): Promise<ApiResponse<Author>> {
 
 export async function getAdminAuthors(): Promise<ApiResponse<Author>> {
   try {
-    return await fetchApiWithParams<Author>('authors/', {}, ADMIN_API_BASE_URL);
+    return await fetchApiWithParams<Author>('authors/', {}, getAdminApiBaseUrl());
   } catch (error) {
     console.error('Error fetching admin authors:', error);
     return { results: [], count: 0, next: null, previous: null };
@@ -665,7 +668,7 @@ export async function getBlogPostWithAdminAuthors(id: string): Promise<{ post: B
 
 export async function getAuthorById(id: string): Promise<Author | null> {
   try {
-    return await genericFetch<Author>(`${API_BASE_URL}authors/${id}/`);
+    return await genericFetch<Author>(`${getApiBaseUrl()}authors/${id}/`);
   } catch (error) {
     console.error('Error fetching author by ID:', error);
     return null;
@@ -674,7 +677,7 @@ export async function getAuthorById(id: string): Promise<Author | null> {
 
 export async function createAuthor(data: Partial<Author>): Promise<Author> {
   try {
-    return await genericFetch<Author>(`${ADMIN_API_BASE_URL}authors/`, 'POST', data);
+    return await genericFetch<Author>(`${getAdminApiBaseUrl()}authors/`, 'POST', data);
   } catch (error) {
     console.error('Error creating author:', error);
     throw error;
@@ -683,7 +686,7 @@ export async function createAuthor(data: Partial<Author>): Promise<Author> {
 
 export async function updateAuthor(id: number, data: Partial<Author>): Promise<Author> {
   try {
-    return await genericFetch<Author>(`${ADMIN_API_BASE_URL}authors/${id}/`, 'PUT', data);
+    return await genericFetch<Author>(`${getAdminApiBaseUrl()}authors/${id}/`, 'PUT', data);
   } catch (error) {
     console.error('Error updating author:', error);
     throw error;
@@ -692,7 +695,7 @@ export async function updateAuthor(id: number, data: Partial<Author>): Promise<A
 
 export async function deleteAuthor(id: number): Promise<void> {
   try {
-    await genericFetch(`${ADMIN_API_BASE_URL}authors/${id}/`, 'DELETE');
+    await genericFetch(`${getAdminApiBaseUrl()}authors/${id}/`, 'DELETE');
   } catch (error) {
     console.error('Error deleting author:', error);
     throw error;
@@ -702,7 +705,7 @@ export async function deleteAuthor(id: number): Promise<void> {
 // ===== PARTNERS API =====
 export async function getPartners(): Promise<ApiResponse<Partner>> {
   try {
-    return await fetchApiWithParams<Partner>('partners/', {}, ADMIN_API_BASE_URL);
+    return await fetchApiWithParams<Partner>('partners/', {}, getAdminApiBaseUrl());
   } catch (error) {
     console.error('Error fetching partners:', error);
     return { results: [], count: 0, next: null, previous: null };
@@ -717,7 +720,7 @@ export async function getTestimonials(filters?: TestimonialFilters): Promise<Api
     if (filters?.page) params.page = filters.page;
     if (filters?.page_size) params.page_size = filters.page_size;
 
-    return await fetchApiWithParams<Testimonial>('testimonials/', params, ADMIN_API_BASE_URL);
+    return await fetchApiWithParams<Testimonial>('testimonials/', params, getAdminApiBaseUrl());
   } catch (error) {
     console.error('Error fetching testimonials:', error);
     return { results: [], count: 0, next: null, previous: null };
@@ -732,7 +735,7 @@ export async function getContactSubmissions(filters?: { page?: number; page_size
     if (filters?.page) params.page = filters.page;
     if (filters?.page_size) params.page_size = filters.page_size;
 
-    return await fetchApiWithParams<ContactFormSubmission>('contact-submissions/', params, ADMIN_API_BASE_URL);
+    return await fetchApiWithParams<ContactFormSubmission>('contact-submissions/', params, getAdminApiBaseUrl());
   } catch (error) {
     console.error('Error fetching contact submissions:', error);
     return { results: [], count: 0, next: null, previous: null };
@@ -741,7 +744,7 @@ export async function getContactSubmissions(filters?: { page?: number; page_size
 
 export async function getContactSubmissionById(id: string): Promise<ContactFormSubmission | null> {
   try {
-    return await genericFetch<ContactFormSubmission>(`${ADMIN_API_BASE_URL}contactformsubmissions/${id}/`);
+    return await genericFetch<ContactFormSubmission>(`${getAdminApiBaseUrl()}contactformsubmissions/${id}/`);
   } catch (error) {
     console.error('Error fetching contact submission by ID:', error);
     return null;
@@ -751,7 +754,7 @@ export async function getContactSubmissionById(id: string): Promise<ContactFormS
 // ===== CONTACT FORM API =====
 export async function submitContactForm(submission: Omit<ContactFormSubmission, 'id' | 'submitted_at'>): Promise<ContactFormSubmission> {
   try {
-    return await genericFetch<ContactFormSubmission>(`${API_BASE_URL}contact-submissions/`, 'POST', submission);
+    return await genericFetch<ContactFormSubmission>(`${getApiBaseUrl()}contact-submissions/`, 'POST', submission);
   } catch (error) {
     throw new Error(`Contact form submission failed: ${error instanceof Error ? error.message : String(error)}`);
   }
@@ -804,7 +807,7 @@ export async function getPropertyImages(propertyId: string): Promise<PropertyIma
 }
 export async function getPageContent(slug: string): Promise<PageContent | null> {
   try {
-    return await genericFetch<PageContent>(`${API_BASE_URL}pages/${slug}/`);
+    return await genericFetch<PageContent>(`${getApiBaseUrl()}pages/${slug}/`);
   } catch (error) {
     console.error(`Error fetching page content for ${slug}:`, error);
     return null;
