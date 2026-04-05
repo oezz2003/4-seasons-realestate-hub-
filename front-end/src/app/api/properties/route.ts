@@ -73,17 +73,26 @@ export async function GET(request: Request) {
             prisma.property.count({ where })
         ]);
 
-        // Format output to match the legacy Django API
+        // Format output to match the legacy Django API and handle absolute URLs
+        const formatUrl = (url: string | null) => {
+            if (!url) return null;
+            if (url.startsWith('/http')) return url.substring(1);
+            return url;
+        };
+
         const formattedProperties = properties.map(p => ({
             ...p,
             price: p.price.toString(), // Decimal to string
             property_type: p.propertyType,
-            main_image: p.mainImage,
-            floor_plan_image: p.floorPlanImage,
-            map_image: p.mapImage,
+            main_image: formatUrl(p.mainImage),
+            floor_plan_image: formatUrl(p.floorPlanImage),
+            map_image: formatUrl(p.mapImage),
             is_new_launch: p.isNewLaunch,
             is_featured: p.isFeatured,
-            gallery_images: p.galleryImages,
+            gallery_images: p.galleryImages.map(img => ({
+                ...img,
+                image: formatUrl(img.image)
+            })),
         }));
 
         return NextResponse.json({

@@ -3,22 +3,17 @@ import { BlogPost, Author, Amenity, Location, Developer, Compound, Property, Pro
 const getBaseUrl = () => {
   if (typeof window !== 'undefined') return ''; // Browser uses relative path
   
-  let baseUrl = 'http://localhost:3000'; // Default local fallback
+  // 1. Explicitly set Base URL (highest priority)
+  if (process.env.NEXT_PUBLIC_BASE_URL) return process.env.NEXT_PUBLIC_BASE_URL.replace(/\/$/, '');
   
-  if (process.env.NEXT_PUBLIC_BASE_URL) {
-    baseUrl = process.env.NEXT_PUBLIC_BASE_URL.replace(/\/$/, '');
-  } else if (process.env.VERCEL_URL) {
-    baseUrl = `https://${process.env.VERCEL_URL}`;
-  } else if (process.env.NEXTAUTH_URL && !process.env.NEXTAUTH_URL.includes('localhost')) {
-    baseUrl = process.env.NEXTAUTH_URL.replace(/\/$/, '');
-  }
-
-  // Server-side logging to help diagnose Vercel issues
-  if (process.env.NODE_ENV === 'production') {
-    console.log(`[SSR] Using Base URL: ${baseUrl}`);
+  // 2. Vercel deployment URL
+  if (process.env.VERCEL_URL) {
+      const url = process.env.VERCEL_URL.includes('http') ? process.env.VERCEL_URL : `https://${process.env.VERCEL_URL}`;
+      return url.replace(/\/$/, '');
   }
   
-  return baseUrl;
+  // 3. Fallback for local SSR
+  return 'http://localhost:3000';
 };
 
 export const getApiBaseUrl = () => `${getBaseUrl()}/api/`;
@@ -112,15 +107,21 @@ export async function fetchApiWithParams<T>(endpoint: string, params?: Record<st
 
     // Add auth token if available ONLY for explicit admin or dashboard calls
     const token = getAuthToken();
-    const isPublicRoute = url.toString().includes('/api/properties') || 
-                         url.toString().includes('/api/partners') || 
-                         url.toString().includes('/api/testimonials') ||
-                         url.toString().includes('/api/developers') ||
-                         url.toString().includes('/api/compounds') ||
-                         url.toString().includes('/api/pages');
+    const urlStr = url.toString();
+    const isPublicRoute = urlStr.includes('/api/properties') || 
+                         urlStr.includes('/api/partners') || 
+                         urlStr.includes('/api/testimonials') ||
+                         urlStr.includes('/api/developers') ||
+                         urlStr.includes('/api/compounds') ||
+                         urlStr.includes('/api/pages') ||
+                         urlStr.includes('/api/test-db');
 
-    if (token && !isPublicRoute && (url.toString().includes('/admin/') || url.toString().includes('/dashboard/'))) {
+    if (token && !isPublicRoute && (urlStr.includes('/admin/') || urlStr.includes('/dashboard/'))) {
       headers['Authorization'] = `Token ${token}`;
+    }
+
+    if (process.env.NODE_ENV === 'production' && typeof window === 'undefined') {
+        console.log(`[SSR Fetch] ${url.toString()} (Auth: ${!!headers['Authorization']})`);
     }
 
     const response = await fetch(url.toString(), {
