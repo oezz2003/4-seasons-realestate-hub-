@@ -3,21 +3,22 @@ import { BlogPost, Author, Amenity, Location, Developer, Compound, Property, Pro
 const getBaseUrl = () => {
   if (typeof window !== 'undefined') return ''; // Browser uses relative path
   
-  // 1. Explicitly set Base URL (highest priority)
-  if (process.env.NEXT_PUBLIC_BASE_URL) return process.env.NEXT_PUBLIC_BASE_URL.replace(/\/$/, '');
+  let baseUrl = 'http://localhost:3000'; // Default local fallback
   
-  // 2. Vercel deployment URL
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  
-  // 3. NextAuth URL (ignore localhost if on Vercel)
-  if (process.env.NEXTAUTH_URL) {
-    const url = process.env.NEXTAUTH_URL.replace(/\/$/, '');
-    if (!url.includes('localhost') || !process.env.VERCEL) {
-        return url;
-    }
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    baseUrl = process.env.NEXT_PUBLIC_BASE_URL.replace(/\/$/, '');
+  } else if (process.env.VERCEL_URL) {
+    baseUrl = `https://${process.env.VERCEL_URL}`;
+  } else if (process.env.NEXTAUTH_URL && !process.env.NEXTAUTH_URL.includes('localhost')) {
+    baseUrl = process.env.NEXTAUTH_URL.replace(/\/$/, '');
+  }
+
+  // Server-side logging to help diagnose Vercel issues
+  if (process.env.NODE_ENV === 'production') {
+    console.log(`[SSR] Using Base URL: ${baseUrl}`);
   }
   
-  return 'http://localhost:3000'; // Default local fallback
+  return baseUrl;
 };
 
 export const getApiBaseUrl = () => `${getBaseUrl()}/api/`;
