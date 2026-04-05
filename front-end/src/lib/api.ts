@@ -110,9 +110,16 @@ export async function fetchApiWithParams<T>(endpoint: string, params?: Record<st
       'Content-Type': 'application/json',
     };
 
-    // Add auth token if available (for admin calls)
+    // Add auth token if available ONLY for explicit admin or dashboard calls
     const token = getAuthToken();
-    if (token && (url.toString().includes('/admin/') || url.toString().includes(getAdminApiBaseUrl()))) {
+    const isPublicRoute = url.toString().includes('/api/properties') || 
+                         url.toString().includes('/api/partners') || 
+                         url.toString().includes('/api/testimonials') ||
+                         url.toString().includes('/api/developers') ||
+                         url.toString().includes('/api/compounds') ||
+                         url.toString().includes('/api/pages');
+
+    if (token && !isPublicRoute && (url.toString().includes('/admin/') || url.toString().includes('/dashboard/'))) {
       headers['Authorization'] = `Token ${token}`;
     }
 
