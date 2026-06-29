@@ -52,9 +52,18 @@ export function SignUpModal({ mobile }: { mobile?: boolean }) {
             fetch("/api/compounds"),
             fetch("/api/developers"),
           ]);
-          if (locRes.ok) setLocations(await locRes.json());
-          if (compRes.ok) setCompounds(await compRes.json());
-          if (devRes.ok) setDevelopers(await devRes.json());
+          if (locRes.ok) {
+            const data = await locRes.json();
+            setLocations(data.results || []);
+          }
+          if (compRes.ok) {
+            const data = await compRes.json();
+            setCompounds(data.results || []);
+          }
+          if (devRes.ok) {
+            const data = await devRes.json();
+            setDevelopers(data.results || []);
+          }
         } catch (error) {
           console.error("Error fetching filters:", error);
         }

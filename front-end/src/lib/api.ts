@@ -9,6 +9,7 @@ const getBaseUrl = () => {
 
 const API_BASE_URL = `${getBaseUrl()}/api/`;
 const ADMIN_API_BASE_URL = `${getBaseUrl()}/api/`;
+export const getAdminApiBaseUrl = () => ADMIN_API_BASE_URL;
 
 // Token storage utility
 const getAuthToken = (): string | null => {
@@ -791,4 +792,9 @@ export async function getPropertyImages(propertyId: string): Promise<PropertyIma
     console.error('Error fetching property images:', error);
     return [];
   }
+}
+
+export async function getPageContent(slug: string): Promise<any | null> {
+  // Mock CMS data for now, can be implemented later when CMS is added
+  return null;
 }
