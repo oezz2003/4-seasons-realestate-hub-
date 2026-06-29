@@ -12,8 +12,8 @@ const adapter = new PrismaPg(pool as any);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-    const adminEmail = 'admin@admin.com';
-    const adminPassword = 'password';
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@admin.com';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'password';
 
     const existingAdmin = await prisma.user.findUnique({
         where: { email: adminEmail }
@@ -22,6 +22,10 @@ async function main() {
     if (existingAdmin) {
         console.log('Admin user already exists. Skipping initial seed.');
         return;
+    }
+
+    if (adminPassword === 'password') {
+        console.warn('\n⚠️ WARNING: Using default admin password. Please set ADMIN_PASSWORD in environment variables for production! ⚠️\n');
     }
 
     const hashedPassword = await bcrypt.hash(adminPassword, 10);
@@ -38,7 +42,7 @@ async function main() {
 
     console.log(`Successfully seeded default admin user:
   - Email: ${admin.email}
-  - Password: ${adminPassword}
+  - Password: ${adminPassword === 'password' ? 'password (DEFAULT)' : '[HIDDEN]'}
   `);
 }
 

@@ -14,6 +14,7 @@ import {
   Star,
   Layout,
   MessageSquare,
+  UserPlus,
 } from 'lucide-react';
 
 const navigation = [
@@ -24,6 +25,7 @@ const navigation = [
   { name: 'Blog Posts', href: '/admin/dashboard/blog', icon: FileText },
   { name: 'Page Content', href: '/admin/dashboard/pages', icon: Layout },
   { name: 'Inquiries', href: '/admin/dashboard/contacts', icon: MessageSquare },
+  { name: 'Leads', href: '/admin/dashboard/leads', icon: UserPlus },
   { name: 'Locations', href: '/admin/dashboard/settings/locations', icon: MapPin },
   { name: 'Amenities', href: '/admin/dashboard/settings/amenities', icon: Star },
 ];

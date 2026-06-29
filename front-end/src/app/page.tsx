@@ -80,20 +80,6 @@ export default async function Home() {
 
       
 
-      {/* Partners Section */}
-      <section className="bg-surface py-20 border-y border-slate-100 dark:border-slate-800">
-        <div className="container mx-auto px-8">
-          <p className="font-label text-center text-[10px] uppercase tracking-[0.4em] text-muted-foreground/60 mb-12 font-bold">Trusted by Industry Leaders</p>
-          <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-30 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-700">
-            {['EMAAR', 'SODIC', 'ORASCOM', 'PALM HILLS', 'TMG'].map((name) => (
-              <span key={name} className="font-headline text-2xl md:text-3xl font-black tracking-tighter">{name}</span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <AnimatedStats stats={stats} />
-
       <section className="py-24 md:py-32 bg-surface-lowest">
         <div className="container mx-auto px-4 md:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
@@ -162,6 +148,20 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* Partners Section */}
+      <section className="bg-surface py-20 border-y border-slate-100 dark:border-slate-800">
+        <div className="container mx-auto px-8">
+          <p className="font-label text-center text-[10px] uppercase tracking-[0.4em] text-muted-foreground/60 mb-12 font-bold">Trusted by Industry Leaders</p>
+          <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-30 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-700">
+            {['EMAAR', 'SODIC', 'ORASCOM', 'PALM HILLS', 'TMG'].map((name) => (
+              <span key={name} className="font-headline text-2xl md:text-3xl font-black tracking-tighter">{name}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <AnimatedStats stats={stats} />
 
       {/* Value Proposition */}
       <section className="py-32 max-w-7xl mx-auto px-8">

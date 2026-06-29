@@ -15,6 +15,7 @@ model Developer {
   description String?
   compounds   Compound[]
   properties  Property[]
+  leads       Lead[]
 }
 
 model Location {
@@ -24,6 +25,7 @@ model Location {
   mapUrl     String?
   compounds  Compound[]
   properties Property[]
+  leads      Lead[]
 }
 
 model Amenity {
@@ -44,9 +46,10 @@ model Compound {
   status       String?
   deliveryDate String?
   developer    Developer  @relation(fields: [developerId], references: [id], onDelete: Cascade)
-  location     Location?  @relation(fields: [locationId], references: [id])
+  location     Location?  @relation(fields: [locationId], references: [id], onDelete: SetNull)
   properties   Property[]
   amenities    Amenity[]  @relation("AmenityToCompound")
+  leads        Lead[]
 }
 
 model Property {
@@ -67,9 +70,9 @@ model Property {
   mapImage       String?
   isNewLaunch    Boolean         @default(false)
   isFeatured     Boolean         @default(false)
-  compound       Compound?       @relation(fields: [compoundId], references: [id])
-  developer      Developer?      @relation(fields: [developerId], references: [id])
-  location       Location?       @relation(fields: [locationId], references: [id])
+  compound       Compound?       @relation(fields: [compoundId], references: [id], onDelete: SetNull)
+  developer      Developer?      @relation(fields: [developerId], references: [id], onDelete: SetNull)
+  location       Location?       @relation(fields: [locationId], references: [id], onDelete: SetNull)
   galleryImages  PropertyImage[]
   amenities      Amenity[]       @relation("AmenityToProperty")
 }
@@ -99,7 +102,7 @@ model BlogPost {
   authorId    Int?
   image       String?
   status      String   @default("Draft")
-  author      Author?  @relation(fields: [authorId], references: [id])
+  author      Author?  @relation(fields: [authorId], references: [id], onDelete: SetNull)
 }
 
 model Partner {
@@ -169,4 +172,22 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Lead {
+  id          Int      @id @default(autoincrement())
+  name        String
+  email       String
+  phone       String?
+  locationId  Int?
+  compoundId  Int?
+  developerId Int?
+  propertyType String?
+  message     String?
+  status      String   @default("Pending") // Pending, Contacted, Closed
+  submittedAt DateTime @default(now())
+
+  location    Location?  @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  compound    Compound?  @relation(fields: [compoundId], references: [id], onDelete: SetNull)
+  developer   Developer? @relation(fields: [developerId], references: [id], onDelete: SetNull)
 }

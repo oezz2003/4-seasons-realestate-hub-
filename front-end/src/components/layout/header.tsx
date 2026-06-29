@@ -16,6 +16,7 @@ import {
 import { Logo } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "../theme-toggle";
+import { SignUpModal } from "@/components/sign-up-modal";
 
 const navLinks = [
   { href: "/", label: "Home", icon: Home },
@@ -139,11 +140,9 @@ export function Header() {
                   <div className="scale-110">
                     <ThemeToggle isTransparent={isTransparent}/>
                   </div>
-                  <Link href="/contact" className="hidden lg:block">
-                    <Button className="rounded-full font-black uppercase tracking-widest text-[9px] h-10 px-6 shadow-xl shadow-primary/20 transition-transform hover:scale-105">
-                      Establish Dialogue
-                    </Button>
-                  </Link>
+                  <div className="hidden lg:block">
+                    <SignUpModal />
+                  </div>
                 </div>
               </div>
             </div>
@@ -190,6 +189,7 @@ export function Header() {
                     <Globe className="mr-2 h-5 w-5" />
                     Switch to {lang === "EN" ? "AR" : "EN"}
                   </Button>
+                  <SignUpModal mobile />
                   {navLinks.map(({ href, label, icon: Icon }) => (
                     <Link
                       key={label}

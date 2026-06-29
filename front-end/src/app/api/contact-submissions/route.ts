@@ -39,15 +39,33 @@ export async function GET(request: Request) {
     }
 }
 
+import { z } from 'zod';
+
+const contactSchema = z.object({
+    name: z.string().min(1, 'Name is required').max(255),
+    email: z.string().email('Invalid email address').max(255),
+    phone: z.string().max(50).optional().nullable(),
+    message: z.string().min(1, 'Message is required').max(10000),
+});
+
 export async function POST(request: Request) {
     try {
         const body = await request.json();
+        
+        // Validate input
+        const result = contactSchema.safeParse(body);
+        if (!result.success) {
+            return NextResponse.json({ error: 'Validation failed', details: result.error.format() }, { status: 400 });
+        }
+        
+        const data = result.data;
+
         const submission = await prisma.contactFormSubmission.create({
             data: {
-                name: body.name,
-                email: body.email,
-                phone: body.phone,
-                message: body.message,
+                name: data.name,
+                email: data.email,
+                phone: data.phone,
+                message: data.message,
             },
         });
 

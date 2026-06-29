@@ -3,7 +3,19 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]/route';
 import { slugify } from '@/lib/utils';
+import { Prisma } from '@prisma/client';
+import { z } from 'zod';
 
+const blogPostSchema = z.object({
+    title: z.string().min(1, 'Title is required').max(255),
+    slug: z.string().max(255).optional().nullable(),
+    excerpt: z.string().min(1, 'Excerpt is required').max(1000),
+    content: z.string().min(1, 'Content is required'),
+    image: z.string().url('Invalid image URL').optional().nullable(),
+    status: z.enum(['Draft', 'Published']).optional().default('Draft'),
+    author_id: z.union([z.string(), z.number()]).optional().nullable(),
+    author: z.union([z.string(), z.number()]).optional().nullable(),
+});
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
@@ -17,7 +29,7 @@ export async function GET(request: Request) {
         const search = searchParams.get('search');
         const slug = searchParams.get('slug');
 
-        const where: any = {};
+        const where: Prisma.BlogPostWhereInput = {};
 
         if (slug) where.slug = slug;
         if (authorId) {
@@ -68,17 +80,24 @@ export async function POST(request: Request) {
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const body = await request.json();
-        const authorId = body.author_id ? parseInt(body.author_id) : (body.author ? parseInt(body.author) : null);
+        
+        const result = blogPostSchema.safeParse(body);
+        if (!result.success) {
+            return NextResponse.json({ error: 'Validation failed', details: result.error.format() }, { status: 400 });
+        }
+        
+        const data = result.data;
+        const authorId = data.author_id ? parseInt(data.author_id as string) : (data.author ? parseInt(data.author as string) : null);
         
         const post = await prisma.blogPost.create({
             data: {
-                title: body.title,
-                slug: body.slug || slugify(body.title),
-                excerpt: body.excerpt,
-                content: body.content,
-                image: body.image,
-                status: body.status || 'Draft',
-                authorId: authorId,
+                title: data.title,
+                slug: data.slug || slugify(data.title),
+                excerpt: data.excerpt,
+                content: data.content,
+                image: data.image,
+                status: data.status,
+                authorId: isNaN(authorId as number) ? null : authorId,
             },
         });
 

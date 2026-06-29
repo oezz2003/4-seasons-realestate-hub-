@@ -1,4 +1,5 @@
 import type {NextConfig} from 'next';
+import { withSentryConfig } from '@sentry/nextjs';
 
 const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://127.0.0.1:8000';
 const apiUrl = new URL(apiBase);
@@ -48,4 +49,22 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(
+  nextConfig,
+  {
+    // For all available options, see:
+    // https://github.com/getsentry/sentry-webpack-plugin#options
+    silent: true,
+    org: process.env.SENTRY_ORG || "4-seasons",
+    project: process.env.SENTRY_PROJECT || "four-seasons-hub",
+    
+    // For all available options, see:
+    // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+    widenClientFileUpload: true,
+    transpileClientSDK: true,
+    tunnelRoute: "/monitoring",
+    hideSourceMaps: true,
+    disableLogger: true,
+    automaticVercelMonitors: true,
+  }
+);
